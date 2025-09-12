@@ -891,8 +891,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            // Ad Banner at the bottom - independent from other elements
-            const AdBanner(),
+            // Ad Banner at the bottom with proper spacing
+            Container(
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: const AdBanner(),
+            ),
           ],
         ),
       ),

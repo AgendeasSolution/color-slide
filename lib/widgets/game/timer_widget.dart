@@ -24,7 +24,9 @@ class TimerWidget extends StatelessWidget {
     double timeProgress;
     bool isTimeUp;
     
-    if (startTime == null) {
+    // If startTime is null, show full time (timer not started)
+    // If timerPaused is true, show full time (timer paused)
+    if (startTime == null || gameState.timerPaused) {
       remainingTime = gameState.currentConfig.timeLimitMinutes * 60;
       timeProgress = 0.0;
       isTimeUp = false;
@@ -38,7 +40,7 @@ class TimerWidget extends StatelessWidget {
     
     // Debug: Print timer widget rebuild (only every 5 seconds to reduce spam)
     if (tick % 5 == 0) {
-      print('🕐 TimerWidget rebuild - Level ${gameState.currentLevel}, Tick: $tick, StartTime: $startTime, Now: $now, Remaining: $remainingTime');
+      print('🕐 TimerWidget rebuild - Level ${gameState.currentLevel}, Tick: $tick, StartTime: $startTime, TimerPaused: ${gameState.timerPaused}, Now: $now, Remaining: $remainingTime');
     }
     
     // Color based on remaining time

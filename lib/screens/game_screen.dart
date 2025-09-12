@@ -16,6 +16,7 @@ import '../widgets/dialogs/how_to_play_content.dart';
 import '../widgets/dialogs/stats_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
+import '../services/interstitial_ad_service.dart';
 
 /// Main game screen widget
 class GameScreen extends StatefulWidget {
@@ -46,6 +47,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     super.initState();
     _initializeAnimations();
     _initializeGameState();
+    
+    // Preload interstitial ad for better user experience
+    InterstitialAdService.instance.preloadAd();
     
     // Start the game immediately when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -100,32 +104,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _startGameTimer() {
     _gameTimer?.cancel();
     _timerTick = 0; // Reset tick counter
-    print('⏰ Starting game timer for Level ${_gameState.currentLevel}');
-    print('⏰ Start time: ${_gameState.startTime}');
-    print('⏰ Time limit: ${_gameState.currentConfig.timeLimitMinutes} minutes');
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
+      if (mounted && _gameState.startTime != null) {
         setState(() {
           // Increment tick to force UI update
           _timerTick++;
           
-          // Debug: Print remaining time every 5 seconds
-          if (_timerTick % 5 == 0) {
-            final now = DateTime.now();
-            final elapsed = _gameState.startTime != null ? now.difference(_gameState.startTime!).inSeconds : 0;
-            final remaining = _gameState.currentConfig.timeLimitMinutes * 60 - elapsed;
-            print('⏰ Level ${_gameState.currentLevel} - Tick: $_timerTick, StartTime: ${_gameState.startTime}, Elapsed: ${elapsed}s, Remaining: ${remaining}s');
-          }
-          
           // Check if time is up using real-time calculation
-          if (_gameState.startTime != null) {
-            final now = DateTime.now();
-            final elapsed = now.difference(_gameState.startTime!).inSeconds;
-            final remaining = _gameState.currentConfig.timeLimitMinutes * 60 - elapsed;
-            if (remaining <= 0 && !_gameState.gameWon && !_gameState.gameOver) {
-              print('⏰ Time is up for Level ${_gameState.currentLevel}!');
-              _handleTimeUp();
-            }
+          final now = DateTime.now();
+          final elapsed = now.difference(_gameState.startTime!).inSeconds;
+          final remaining = _gameState.currentConfig.timeLimitMinutes * 60 - elapsed;
+          if (remaining <= 0 && !_gameState.gameWon && !_gameState.gameOver) {
+            _handleTimeUp();
           }
         });
       }
@@ -133,7 +123,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _stopGameTimer() {
-    print('⏰ Stopping game timer for Level ${_gameState.currentLevel}');
     _gameTimer?.cancel();
     _gameTimer = null;
   }
@@ -221,14 +210,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
     
     // Start the game timer AFTER setState
-    print('🎮 About to start timer for Level ${_gameState.currentLevel}');
-    print('🎮 Start time before timer: ${_gameState.startTime}');
     _startGameTimer();
-    print('🎮 Timer start called for Level ${_gameState.currentLevel}');
-    print('🎮 Start time after timer: ${_gameState.startTime}');
   }
 
-  void _resetToInitialPosition() {
+  void _resetToInitialPosition() async {
+    // Stop the current timer completely before showing ad
+    _stopGameTimer();
+    
+    // Reset the game state
     setState(() {
       _gameState = _gameState.copyWith(
         boardState: List.from(_gameState.initialBoardState),
@@ -236,14 +225,52 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         gameWon: false,
         gameOver: false,
         moves: 0,
-        startTime: DateTime.now(),
+        startTime: null, // No start time - timer not running
         endTime: null,
         timeUp: false,
+        timerPaused: false,
       );
+      _timerTick = 0;
     });
     
-    // Restart the timer AFTER setState
+    // Show interstitial ad with 50% probability and callback
+    final adShown = await InterstitialAdService.instance.showAdWithProbability(
+      onAdDismissed: () {
+        _startTimerAfterAd();
+      }
+    );
+    
+    // If ad was NOT shown (skipped due to probability), start timer immediately
+    if (!adShown) {
+      _startTimerAfterAd();
+    }
+  }
+
+  void _startTimerAfterAd() {
+    // Preload next ad for better user experience
+    InterstitialAdService.instance.preloadAd();
+    
+    // Start the timer fresh after ad is finished
+    final freshStartTime = DateTime.now();
+    setState(() {
+      _gameState = _gameState.copyWith(
+        startTime: freshStartTime,
+        timerPaused: false,
+      );
+      _timerTick = 0;
+    });
+    
+    // Start the timer
     _startGameTimer();
+    
+    // Force immediate UI update
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        setState(() {
+          _timerTick = 1;
+        });
+      }
+    });
   }
 
   void _handleCellTap(int index) {
@@ -301,7 +328,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
 
-  void _nextLevel() {
+  void _nextLevel() async {
     print('🔄 Next Level called - Current Level: ${_gameState.currentLevel}');
     
     // Ensure timer is stopped before starting new level
@@ -320,8 +347,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         );
       });
       print('🔄 Starting new game for Level ${_gameState.currentLevel}');
-      // Start the game immediately without delay
-      _startNewGame();
+      
+      // Show interstitial ad with 100% probability for next level
+      final adShown = await InterstitialAdService.instance.showAdAlways(
+        onAdDismissed: () {
+          print('🔄 NEXT LEVEL AD DISMISSED - Starting new game');
+          _startNewGame();
+        }
+      );
+      
+      // If ad was not shown (loading error), start game immediately
+      if (!adShown) {
+        print('🔄 Next level ad not shown, starting game immediately');
+        _startNewGame();
+      }
     } else {
       // All levels completed, show completion dialog
       _showAllLevelsCompletedDialog();
@@ -581,8 +620,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               right: 0,
                               child: Builder(
                                 builder: (context) {
-                                  if (_timerTick % 10 == 0) {
-                                    print('🕐 TimerWidget display - Level ${_gameState.currentLevel}, boardNotEmpty: ${_gameState.boardState.isNotEmpty}, gameWon: ${_gameState.gameWon}, gameOver: ${_gameState.gameOver}');
+                                  // Only show timer widget if timer is actually running
+                                  if (_gameState.startTime == null) {
+                                    return const SizedBox.shrink(); // Hide timer when not started
                                   }
                                   return TimerWidget(gameState: _gameState, tick: _timerTick);
                                 },
@@ -620,8 +660,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            // Ad Banner at the bottom - independent from other elements
-            const AdBanner(),
+            // Ad Banner at the bottom with proper spacing
+            Container(
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: const AdBanner(),
+            ),
           ],
         ),
       ),

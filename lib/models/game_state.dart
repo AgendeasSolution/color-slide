@@ -14,6 +14,7 @@ class GameState {
   final DateTime? startTime;
   final DateTime? endTime;
   final bool timeUp;
+  final bool timerPaused;
 
   const GameState({
     required this.currentLevel,
@@ -28,6 +29,7 @@ class GameState {
     this.startTime,
     this.endTime,
     this.timeUp = false,
+    this.timerPaused = false,
   });
 
   GameState copyWith({
@@ -43,6 +45,7 @@ class GameState {
     DateTime? startTime,
     DateTime? endTime,
     bool? timeUp,
+    bool? timerPaused,
   }) {
     return GameState(
       currentLevel: currentLevel ?? this.currentLevel,
@@ -57,12 +60,13 @@ class GameState {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       timeUp: timeUp ?? this.timeUp,
+      timerPaused: timerPaused ?? this.timerPaused,
     );
   }
 
   /// Get elapsed time in seconds
   int get elapsedTimeInSeconds {
-    if (startTime == null) return 0;
+    if (startTime == null || timerPaused) return 0;
     final end = endTime ?? DateTime.now();
     return end.difference(startTime!).inSeconds;
   }
@@ -77,7 +81,7 @@ class GameState {
 
   /// Get remaining time in seconds
   int get remainingTimeInSeconds {
-    if (startTime == null) return currentConfig.timeLimitMinutes * 60;
+    if (startTime == null || timerPaused) return currentConfig.timeLimitMinutes * 60;
     final elapsed = elapsedTimeInSeconds;
     final total = currentConfig.timeLimitMinutes * 60;
     return (total - elapsed).clamp(0, total);
