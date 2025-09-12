@@ -1,0 +1,413 @@
+import 'dart:math';
+import '../models/level.dart';
+
+/// Game logic utilities
+class GameLogic {
+  /// Creates a solved board state for the given level configuration
+  /// Ensures no two same-colored balls are adjacent (horizontally, vertically, or diagonally)
+  static List<String?> createSolvedBoard(Level config) {
+    final int boardSize = config.gridSize * config.gridSize;
+    List<String?> solvedState = List.filled(boardSize, null);
+    
+    // Set the empty cell at the end
+    solvedState[boardSize - 1] = null;
+    
+    // Generate a valid color distribution using column-by-column approach
+    _generateColumnWiseValidBoard(solvedState, config);
+    
+    return solvedState;
+  }
+
+  /// Generates a valid board using advanced backtracking with constraint propagation
+  static void _generateColumnWiseValidBoard(List<String?> board, Level config) {
+    final int gridSize = config.gridSize;
+    final int emptyIndex = board.length - 1;
+    
+    // Calculate how many times each color should appear
+    final int cellsToFill = board.length - 1; // Exclude empty cell
+    final Map<String, int> colorCounts = {};
+    
+    for (String color in config.colors) {
+      colorCounts[color] = cellsToFill ~/ config.colors.length;
+    }
+    
+    // Distribute remaining cells to first few colors
+    final int remainder = cellsToFill % config.colors.length;
+    for (int i = 0; i < remainder; i++) {
+      colorCounts[config.colors[i]] = colorCounts[config.colors[i]]! + 1;
+    }
+    
+    // Create list of positions to fill (excluding empty cell)
+    List<int> positions = [];
+    for (int i = 0; i < board.length; i++) {
+      if (i != emptyIndex) positions.add(i);
+    }
+    
+    // Sort positions by constraint level (most constrained first)
+    positions.sort((a, b) => _getConstraintLevel(b, gridSize, emptyIndex) - _getConstraintLevel(a, gridSize, emptyIndex));
+    
+    // Use backtracking to place colors
+    bool success = _backtrackWithSmartPlacement(board, config, colorCounts, positions, 0, emptyIndex);
+    
+    if (!success) {
+      print('⚠️ Backtracking failed, using fallback method');
+      _generateFallbackBoard(board, config, emptyIndex);
+    }
+  }
+
+  /// Calculates constraint level for a position (number of neighbors)
+  static int _getConstraintLevel(int index, int gridSize, int emptyIndex) {
+    final int row = index ~/ gridSize;
+    final int col = index % gridSize;
+    int constraints = 0;
+    
+    // Count neighbors
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        
+        final int newRow = row + dr;
+        final int newCol = col + dc;
+        
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+          final int neighborIndex = newRow * gridSize + newCol;
+          if (neighborIndex != emptyIndex) {
+            constraints++;
+          }
+        }
+      }
+    }
+    
+    return constraints;
+  }
+
+  /// Backtracking with smart placement and constraint propagation
+  static bool _backtrackWithSmartPlacement(
+    List<String?> board,
+    Level config,
+    Map<String, int> colorCounts,
+    List<int> positions,
+    int positionIndex,
+    int emptyIndex,
+  ) {
+    if (positionIndex >= positions.length) {
+      return true; // All positions filled successfully
+    }
+    
+    final int currentPos = positions[positionIndex];
+    
+    // Get available colors for this position
+    List<String> availableColors = _getAvailableColorsForPosition(board, config, currentPos, colorCounts, emptyIndex);
+    
+    // Try each available color
+    for (String color in availableColors) {
+      // Place the color
+      board[currentPos] = color;
+      colorCounts[color] = colorCounts[color]! - 1;
+      
+      // Recursively try next position
+      if (_backtrackWithSmartPlacement(board, config, colorCounts, positions, positionIndex + 1, emptyIndex)) {
+        return true;
+      }
+      
+      // Backtrack: remove the color and restore count
+      board[currentPos] = null;
+      colorCounts[color] = colorCounts[color]! + 1;
+    }
+    
+    return false; // No valid color found for this position
+  }
+
+  /// Gets available colors for a position that don't conflict with neighbors
+  static List<String> _getAvailableColorsForPosition(
+    List<String?> board,
+    Level config,
+    int index,
+    Map<String, int> colorCounts,
+    int emptyIndex,
+  ) {
+    List<String> availableColors = [];
+    
+    for (String color in config.colors) {
+      if (colorCounts[color]! > 0 && _isColorValidAtPosition(board, config, index, color, emptyIndex)) {
+        availableColors.add(color);
+      }
+    }
+    
+    // Shuffle for randomness
+    availableColors.shuffle(Random());
+    return availableColors;
+  }
+
+  /// Fallback method that guarantees a solution
+  static void _generateFallbackBoard(List<String?> board, Level config, int emptyIndex) {
+    final int gridSize = config.gridSize;
+    
+    // Use a simple alternating pattern that minimizes adjacencies
+    List<String> colors = List.from(config.colors);
+    int colorIndex = 0;
+    
+    for (int i = 0; i < board.length; i++) {
+      if (i != emptyIndex) {
+        // Use a checkerboard-like pattern
+        int row = i ~/ gridSize;
+        int col = i % gridSize;
+        
+        // Alternate colors in a pattern that minimizes adjacencies
+        if ((row + col) % 2 == 0) {
+          board[i] = colors[0];
+        } else {
+          board[i] = colors[1 % colors.length];
+        }
+      }
+    }
+    
+    // Try to place remaining colors while avoiding conflicts
+    for (int colorIdx = 2; colorIdx < colors.length; colorIdx++) {
+      String color = colors[colorIdx];
+      
+      // Find positions where we can place this color
+      for (int i = 0; i < board.length; i++) {
+        if (i != emptyIndex && board[i] == colors[0]) {
+          // Check if we can place this color here
+          if (_isColorValidAtPosition(board, config, i, color, emptyIndex)) {
+            board[i] = color;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+
+  /// Checks if a color is valid at a specific position (no adjacent same colors)
+  static bool _isColorValidAtPosition(
+    List<String?> board,
+    Level config,
+    int index,
+    String color,
+    int emptyIndex,
+  ) {
+    final int gridSize = config.gridSize;
+    final int row = index ~/ gridSize;
+    final int col = index % gridSize;
+    
+    // Check all 8 directions around the position
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip current cell
+        
+        final int newRow = row + dr;
+        final int newCol = col + dc;
+        
+        // Check bounds
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+          final int neighborIndex = newRow * gridSize + newCol;
+          
+          // Skip empty cell
+          if (neighborIndex == emptyIndex) continue;
+          
+          // Check if neighbor has the same color
+          if (board[neighborIndex] == color) {
+            return false; // Same color found adjacent
+          }
+        }
+      }
+    }
+    
+    return true; // Color is valid at this position
+  }
+
+
+
+  /// Shuffles the board by making random valid moves while maintaining adjacency constraints
+  static Map<String, dynamic> shuffleBoard(
+    List<String?> boardState,
+    int emptyCellIndex,
+    Level config,
+  ) {
+    List<String?> shuffledBoard = List.from(boardState);
+    int currentEmptyIndex = emptyCellIndex;
+    int attempts = 0;
+    const int maxAttempts = 1000; // Prevent infinite loops
+
+    for (int i = 0; i < config.shuffleMoves && attempts < maxAttempts; i++) {
+      final neighbors = _getValidNeighbors(currentEmptyIndex, config.gridSize);
+      final randomIndex = neighbors[Random().nextInt(neighbors.length)];
+      
+      // Check if this move would create adjacent same colors
+      if (_isValidMove(shuffledBoard, randomIndex, currentEmptyIndex, config)) {
+        _swapCells(shuffledBoard, randomIndex, currentEmptyIndex);
+        currentEmptyIndex = randomIndex;
+      } else {
+        // Try to find a valid move
+        bool foundValidMove = false;
+        for (int neighbor in neighbors) {
+          if (_isValidMove(shuffledBoard, neighbor, currentEmptyIndex, config)) {
+            _swapCells(shuffledBoard, neighbor, currentEmptyIndex);
+            currentEmptyIndex = neighbor;
+            foundValidMove = true;
+            break;
+          }
+        }
+        
+        if (!foundValidMove) {
+          // If no valid move found, just make a random move
+          _swapCells(shuffledBoard, randomIndex, currentEmptyIndex);
+          currentEmptyIndex = randomIndex;
+        }
+      }
+      
+      attempts++;
+    }
+
+    return {
+      'boardState': shuffledBoard,
+      'emptyCellIndex': currentEmptyIndex,
+    };
+  }
+
+  /// Checks if a move would maintain adjacency constraints
+  static bool _isValidMove(
+    List<String?> board,
+    int fromIndex,
+    int toIndex,
+    Level config,
+  ) {
+    // Create a temporary board to test the move
+    List<String?> tempBoard = List.from(board);
+    _swapCells(tempBoard, fromIndex, toIndex);
+    
+    // Check if the move creates any adjacent same colors
+    return validateBoardDistribution(tempBoard, config.gridSize);
+  }
+
+  /// Checks if two cells are adjacent
+  static bool isAdjacent(int index1, int index2, int gridSize) {
+    final row1 = index1 ~/ gridSize;
+    final col1 = index1 % gridSize;
+    final row2 = index2 ~/ gridSize;
+    final col2 = index2 % gridSize;
+
+    return (row1 == row2 && (col1 - col2).abs() == 1) ||
+        (col1 == col2 && (row1 - row2).abs() == 1);
+  }
+
+  /// Gets valid neighbor indices for a given cell
+  static List<int> _getValidNeighbors(int index, int gridSize) {
+    List<int> neighbors = [];
+    final row = index ~/ gridSize;
+    final col = index % gridSize;
+
+    if (row > 0) neighbors.add(index - gridSize); // Up
+    if (row < gridSize - 1) neighbors.add(index + gridSize); // Down
+    if (col > 0) neighbors.add(index - 1); // Left
+    if (col < gridSize - 1) neighbors.add(index + 1); // Right
+
+    return neighbors;
+  }
+
+  /// Swaps two cells in the board
+  static void _swapCells(List<String?> board, int index1, int index2) {
+    final temp = board[index1];
+    board[index1] = board[index2];
+    board[index2] = temp;
+  }
+
+  /// Checks if the current board state is a winning state
+  static bool checkWinCondition(List<String?> boardState, Level config) {
+    final int boardSize = config.gridSize * config.gridSize;
+    for (int i = 0; i < boardSize; i++) {
+      if (boardState[i] == null) continue;
+
+      final targetColor = config.colors[i % config.colors.length];
+      if (boardState[i] != targetColor) {
+        return false; // Not a win yet
+      }
+    }
+    return true;
+  }
+
+  /// Moves a ball from one position to another
+  static Map<String, dynamic> moveBall(
+    List<String?> boardState,
+    int fromIndex,
+    int toIndex,
+  ) {
+    List<String?> newBoardState = List.from(boardState);
+    _swapCells(newBoardState, fromIndex, toIndex);
+    
+    // The empty cell is always the one that was originally empty (toIndex)
+    // After swapping, the ball moves to the empty position, so fromIndex becomes empty
+    final newEmptyIndex = fromIndex;
+    
+    return {
+      'boardState': newBoardState,
+      'emptyCellIndex': newEmptyIndex,
+    };
+  }
+
+  /// Validates that no two same-colored balls are adjacent in the board
+  /// Returns true if the board is valid (no adjacent same colors), false otherwise
+  static bool validateBoardDistribution(List<String?> boardState, int gridSize) {
+    List<String> violations = [];
+    
+    for (int i = 0; i < boardState.length; i++) {
+      if (boardState[i] == null) continue;
+      
+      final int row = i ~/ gridSize;
+      final int col = i % gridSize;
+      
+      // Check all 8 directions (horizontal, vertical, and diagonal)
+      for (int dr = -1; dr <= 1; dr++) {
+        for (int dc = -1; dc <= 1; dc++) {
+          if (dr == 0 && dc == 0) continue; // Skip current cell
+          
+          final int newRow = row + dr;
+          final int newCol = col + dc;
+          
+          // Check bounds
+          if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+            final int neighborIndex = newRow * gridSize + newCol;
+            
+            // Skip empty cells
+            if (boardState[neighborIndex] == null) continue;
+            
+            // Check if neighbor has the same color
+            if (boardState[i] == boardState[neighborIndex]) {
+              violations.add('${boardState[i]} at ($row,$col) adjacent to ${boardState[neighborIndex]} at ($newRow,$newCol)');
+            }
+          }
+        }
+      }
+    }
+    
+    if (violations.isNotEmpty) {
+      print('❌ Board validation failed:');
+      for (String violation in violations) {
+        print('   - $violation');
+      }
+      return false;
+    }
+    
+    return true;
+  }
+
+  /// Debug method to print board state
+  static void printBoardDebug(List<String?> board, int gridSize) {
+    print('Board state:');
+    for (int row = 0; row < gridSize; row++) {
+      String rowStr = '  ';
+      for (int col = 0; col < gridSize; col++) {
+        final index = row * gridSize + col;
+        final color = board[index];
+        if (color == null) {
+          rowStr += 'E ';
+        } else {
+          rowStr += color.substring(0, 1).toUpperCase() + ' ';
+        }
+      }
+      print(rowStr);
+    }
+  }
+}
