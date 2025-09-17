@@ -371,8 +371,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     Navigator.of(context).pop();
   }
 
-  void _exitGame() {
-    Navigator.of(context).pop();
+  void _exitGame() async {
+    _stopGameTimer(); // Stop timer before showing ad
+    
+    // Store navigator context before async operation
+    final navigator = Navigator.of(context);
+    
+    final adShown = await InterstitialAdService.instance.showAdWithProbability(
+      onAdDismissed: () {
+        // Navigate immediately after ad is dismissed using Future.microtask for faster execution
+        Future.microtask(() => navigator.pop());
+      }
+    );
+    
+    // If no ad was shown, navigate immediately
+    if (!adShown) {
+      Future.microtask(() => navigator.pop());
+    }
   }
 
   //============================================================================
