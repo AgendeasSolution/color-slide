@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../services/sound_service.dart';
 
 /// Reusable game dialog widget with enhanced styling
 class GameDialog extends StatefulWidget {
@@ -244,7 +245,10 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                           if (widget.showCloseButton) ...[
                             const SizedBox(height: 16),
                             GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
+                              onTap: () {
+                                SoundService.instance.playButtonTap();
+                                Navigator.of(context).pop();
+                              },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(

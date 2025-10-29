@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../services/sound_service.dart';
 
 /// Reusable dialog button widget
 class DialogButton extends StatelessWidget {
@@ -15,10 +16,15 @@ class DialogButton extends StatelessWidget {
     this.isSecondary = false,
   });
 
+  void _handlePressed() {
+    SoundService.instance.playButtonTap();
+    onPressed();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: _handlePressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: isSecondary ? AppColors.textMuted : AppColors.primary,
         foregroundColor: AppColors.bgDark,

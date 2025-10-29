@@ -17,6 +17,7 @@ import '../widgets/dialogs/stats_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
 import '../services/interstitial_ad_service.dart';
+import '../services/sound_service.dart';
 
 /// Main game screen widget
 class GameScreen extends StatefulWidget {
@@ -128,6 +129,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _handleTimeUp() {
+    print('⏰ Time up detected - playing fail sound');
+    
+    // Stop the timer first
+    _stopGameTimer();
+    
+    // Play fail sound immediately (fire and forget, like win sound)
+    SoundService.instance.playFail();
+    
     setState(() {
       _gameState = _gameState.copyWith(
         gameOver: true,
@@ -136,8 +145,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       );
     });
     
-    _stopGameTimer();
-    _showTimeUpDialog();
+    // Small delay to ensure sound starts playing before dialog appears
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        _showTimeUpDialog();
+      }
+    });
   }
 
   //============================================================================
@@ -305,6 +318,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _handleWin() async {
     // Stop the timer
     _stopGameTimer();
+    
+    // Play win sound
+    SoundService.instance.playWin();
     
     setState(() {
       _gameState = _gameState.copyWith(
@@ -610,9 +626,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   SafeArea(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: GameConstants.verticalPadding,
+                      padding: EdgeInsets.only(
+                        left: horizontalPadding,
+                        right: horizontalPadding,
+                        bottom: GameConstants.verticalPadding,
                       ),
                       child: Stack(
                         children: [

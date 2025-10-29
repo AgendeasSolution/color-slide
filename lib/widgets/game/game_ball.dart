@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../services/sound_service.dart';
 
 /// Game ball widget
 class GameBall extends StatelessWidget {
@@ -13,10 +14,15 @@ class GameBall extends StatelessWidget {
     this.onTap,
   });
 
+  void _handleTap() {
+    SoundService.instance.playSwipe();
+    onTap?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: _handleTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.bgDarker,

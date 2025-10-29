@@ -196,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _onLevelSelected(int level) async {
+    SoundService.instance.playButtonTap();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => GameScreen(
@@ -210,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _showHowToPlay() {
+    SoundService.instance.playButtonTap();
     showDialog(
       context: context,
       builder: (context) => GameDialog(

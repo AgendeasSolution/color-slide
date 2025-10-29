@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../services/sound_service.dart';
 
 /// Game header widget with exit button, level name, and reset button
 class GameHeader extends StatelessWidget {
@@ -15,6 +16,16 @@ class GameHeader extends StatelessWidget {
     required this.onExit,
   });
 
+  void _handleExit() {
+    SoundService.instance.playButtonTap();
+    onExit();
+  }
+
+  void _handleReset() {
+    SoundService.instance.playButtonTap();
+    onReset();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -22,11 +33,11 @@ class GameHeader extends StatelessWidget {
       children: [
         // Exit button (top-left)
         ElevatedButton(
-          onPressed: onExit,
+          onPressed: _handleExit,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.textSecondary.withOpacity(0.1),
             foregroundColor: AppColors.textSecondary,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(GameConstants.borderRadius),
               side: BorderSide(
@@ -34,9 +45,9 @@ class GameHeader extends StatelessWidget {
                 width: 1,
               ),
             ),
-            minimumSize: const Size(48, 48),
+            minimumSize: const Size(40, 40),
           ),
-          child: const Icon(Icons.arrow_back, size: 20),
+          child: const Icon(Icons.arrow_back, size: 18),
         ),
         
         // Level name (center)
@@ -56,17 +67,17 @@ class GameHeader extends StatelessWidget {
         
         // Reset button (top-right)
         ElevatedButton(
-          onPressed: onReset,
+          onPressed: _handleReset,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.bgDark,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(GameConstants.borderRadius),
             ),
-            minimumSize: const Size(48, 48),
+            minimumSize: const Size(40, 40),
           ),
-          child: const Icon(Icons.refresh, size: 20),
+          child: const Icon(Icons.refresh, size: 18),
         ),
       ],
     );
