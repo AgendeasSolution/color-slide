@@ -50,7 +50,6 @@ class GameLogic {
     bool success = _backtrackWithSmartPlacement(board, config, colorCounts, positions, 0, emptyIndex);
     
     if (!success) {
-      print('⚠️ Backtracking failed, using fallback method');
       _generateFallbackBoard(board, config, emptyIndex);
     }
   }
@@ -382,32 +381,6 @@ class GameLogic {
       }
     }
     
-    if (violations.isNotEmpty) {
-      print('❌ Board validation failed:');
-      for (String violation in violations) {
-        print('   - $violation');
-      }
-      return false;
-    }
-    
-    return true;
-  }
-
-  /// Debug method to print board state
-  static void printBoardDebug(List<String?> board, int gridSize) {
-    print('Board state:');
-    for (int row = 0; row < gridSize; row++) {
-      String rowStr = '  ';
-      for (int col = 0; col < gridSize; col++) {
-        final index = row * gridSize + col;
-        final color = board[index];
-        if (color == null) {
-          rowStr += 'E ';
-        } else {
-          rowStr += color.substring(0, 1).toUpperCase() + ' ';
-        }
-      }
-      print(rowStr);
-    }
+    return violations.isEmpty;
   }
 }

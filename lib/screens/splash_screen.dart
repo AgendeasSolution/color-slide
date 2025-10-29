@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
+import '../utils/responsive_helper.dart';
 import 'home_screen.dart';
 
 /// Splash screen widget - shows app logo and developer credit
@@ -81,9 +82,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 768;
-    
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -187,7 +185,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                       child: Text(
                                         'COLOR SLIDE',
                                         style: TextStyle(
-                                          fontSize: isTablet ? 36 : 28,
+                                          fontSize: ResponsiveHelper.getFontSize(context, 28),
                                           fontWeight: FontWeight.w900,
                                           color: Colors.white,
                                           letterSpacing: 3,
@@ -203,13 +201,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                     ),
                                   ),
                                   
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: ResponsiveHelper.getSpacing(context, 20)),
                                   
                                   // Subtitle
                                   Text(
                                     'Master the Art of Color',
                                     style: TextStyle(
-                                      fontSize: isTablet ? 18 : 14,
+                                      fontSize: ResponsiveHelper.getFontSize(context, 14),
                                       color: AppColors.textAccent,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.5,
@@ -251,17 +249,17 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               Text(
                                 'developed by',
                                 style: TextStyle(
-                                  fontSize: isTablet ? 12 : 10,
+                                  fontSize: ResponsiveHelper.getFontSize(context, 10),
                                   color: Colors.white.withOpacity(0.8),
                                   fontWeight: FontWeight.w400,
                                   letterSpacing: 1.0,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
                               Text(
                                 'FGTP Labs',
                                 style: TextStyle(
-                                  fontSize: isTablet ? 16 : 14,
+                                  fontSize: ResponsiveHelper.getFontSize(context, 14),
                                   color: Colors.white.withOpacity(0.9),
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 1.2,

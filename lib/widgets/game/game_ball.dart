@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../services/sound_service.dart';
 
 /// Game ball widget
@@ -21,14 +22,19 @@ class GameBall extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ballPadding = ResponsiveHelper.getBallPadding(context);
+    final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
+    final blurRadius = ResponsiveHelper.getSpacing(context, 8);
+    final shadowOffset = ResponsiveHelper.getSpacing(context, 4);
+    
     return GestureDetector(
       onTap: _handleTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.bgDarker,
-          borderRadius: BorderRadius.circular(GameConstants.borderRadius),
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
-        padding: const EdgeInsets.all(GameConstants.ballPadding),
+        padding: EdgeInsets.all(ballPadding),
         child: AnimatedContainer(
           duration: GameConstants.ballMoveAnimation,
           decoration: BoxDecoration(
@@ -37,9 +43,9 @@ class GameBall extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
-                blurRadius: 8,
+                blurRadius: blurRadius,
                 spreadRadius: 1,
-                offset: const Offset(0, 4),
+                offset: Offset(0, shadowOffset),
               ),
             ],
           ),

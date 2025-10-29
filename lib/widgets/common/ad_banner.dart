@@ -49,7 +49,6 @@ class _AdBannerState extends State<AdBanner> {
     // Refresh ad every 30 seconds to keep it fresh
     Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted && _isAdLoaded) {
-        print('Banner ad: Periodic refresh triggered');
         _refreshAd();
       }
     });
@@ -77,7 +76,6 @@ class _AdBannerState extends State<AdBanner> {
       await MobileAds.instance.initialize();
       _loadBannerAd();
     } catch (e) {
-      print('Failed to initialize Google Mobile Ads: $e');
       // If plugin is not available, show placeholder
       if (mounted) {
         setState(() {
@@ -112,7 +110,6 @@ class _AdBannerState extends State<AdBanner> {
         listener: BannerAdListener(
           onAdLoaded: (ad) {
             if (mounted) {
-              print('Banner ad: Successfully loaded');
               setState(() {
                 _isAdLoaded = true;
                 _isAdLoading = false;
@@ -124,18 +121,9 @@ class _AdBannerState extends State<AdBanner> {
           },
           onAdFailedToLoad: (ad, error) {
             if (mounted) {
-              print('Banner ad failed to load: $error');
-              print('Error code: ${error.code}, Message: ${error.message}');
-              print('Retry count: $_retryCount');
-
               // Handle different error types
               if (error.code == 3) {
-                print('No fill error - no ads available for this ad unit (skipping retry)');
                 // Don't retry for "No Fill" - there are simply no ads available
-              } else if (error.code == 0) {
-                print('Internal error - check ad unit ID and configuration');
-              } else if (error.code == 1) {
-                print('Invalid request - check ad unit ID format');
               }
 
               setState(() {
@@ -158,7 +146,6 @@ class _AdBannerState extends State<AdBanner> {
 
       _bannerAd!.load();
     } catch (e) {
-      print('Error creating banner ad: $e');
       if (mounted) {
         setState(() {
           _isAdLoaded = false;
@@ -178,17 +165,14 @@ class _AdBannerState extends State<AdBanner> {
     
     // Don't retry more than 5 times
     if (_retryCount > 5) {
-      print('Banner ad: Max retry attempts reached, giving up');
       return;
     }
     
     // Exponential backoff: 2s, 4s, 8s, 16s, 32s
     final retryDelay = Duration(seconds: 2 * _retryCount);
-    print('Banner ad: Scheduling retry #$_retryCount in ${retryDelay.inSeconds}s');
     
     _retryTimer = Timer(retryDelay, () {
       if (mounted && !_isAdLoaded) {
-        print('Banner ad: Attempting retry #$_retryCount');
         _retryLoadAd();
       }
     });

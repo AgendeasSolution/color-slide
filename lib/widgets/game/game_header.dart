@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../services/sound_service.dart';
 
 /// Game header widget with exit button, level name, and reset button
@@ -28,6 +29,12 @@ class GameHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final buttonHeight = ResponsiveHelper.getButtonHeight(context);
+    final iconSize = ResponsiveHelper.getIconSize(context, 18);
+    final fontSize = ResponsiveHelper.getFontSize(context, 20);
+    final buttonPadding = ResponsiveHelper.getSpacing(context, 8);
+    final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -37,17 +44,17 @@ class GameHeader extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.textSecondary.withOpacity(0.1),
             foregroundColor: AppColors.textSecondary,
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(buttonPadding),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(GameConstants.borderRadius),
+              borderRadius: BorderRadius.circular(borderRadius),
               side: BorderSide(
                 color: AppColors.textSecondary.withOpacity(0.3),
                 width: 1,
               ),
             ),
-            minimumSize: const Size(40, 40),
+            minimumSize: Size(buttonHeight, buttonHeight),
           ),
-          child: const Icon(Icons.arrow_back, size: 18),
+          child: Icon(Icons.arrow_back, size: iconSize),
         ),
         
         // Level name (center)
@@ -55,9 +62,9 @@ class GameHeader extends StatelessWidget {
           child: Center(
             child: Text(
               "Level $currentLevel",
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
-                fontSize: 20,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
@@ -71,13 +78,13 @@ class GameHeader extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.bgDark,
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(buttonPadding),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(GameConstants.borderRadius),
+              borderRadius: BorderRadius.circular(borderRadius),
             ),
-            minimumSize: const Size(40, 40),
+            minimumSize: Size(buttonHeight, buttonHeight),
           ),
-          child: const Icon(Icons.refresh, size: 18),
+          child: Icon(Icons.refresh, size: iconSize),
         ),
       ],
     );

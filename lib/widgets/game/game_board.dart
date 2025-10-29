@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../models/level.dart';
 import 'game_ball.dart';
 import 'empty_cell.dart';
@@ -24,6 +25,10 @@ class GameBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gridSpacing = ResponsiveHelper.getGridSpacing(context);
+    final cardBorderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.cardBorderRadius);
+    final padding = ResponsiveHelper.getSpacing(context, 10);
+    
     return Center(
       child: ScaleTransition(
         scale: pulseAnimation,
@@ -36,7 +41,7 @@ class GameBoard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(GameConstants.cardBorderRadius),
+            borderRadius: BorderRadius.circular(cardBorderRadius),
             border: Border.all(
               color: config.colors.isNotEmpty 
                 ? AppColors.ballColors[config.colors.first]!.withOpacity(0.3)
@@ -47,21 +52,21 @@ class GameBoard extends StatelessWidget {
                 color: config.colors.isNotEmpty 
                   ? AppColors.ballColors[config.colors.first]!.withOpacity(0.2)
                   : Colors.black.withOpacity(0.2),
-                blurRadius: 35,
-                offset: const Offset(0, 15),
+                blurRadius: ResponsiveHelper.getSpacing(context, 35),
+                offset: Offset(0, ResponsiveHelper.getSpacing(context, 15)),
               ),
             ],
           ),
           child: AspectRatio(
             aspectRatio: 1,
             child: Padding(
-              padding: const EdgeInsets.all(10.0),
+              padding: EdgeInsets.all(padding),
               child: GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: config.gridSize,
-                  crossAxisSpacing: GameConstants.gridSpacing,
-                  mainAxisSpacing: GameConstants.gridSpacing,
+                  crossAxisSpacing: gridSpacing,
+                  mainAxisSpacing: gridSpacing,
                 ),
                 itemCount: boardState.length,
                 itemBuilder: (context, index) {

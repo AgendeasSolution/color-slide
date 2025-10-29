@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../services/sound_service.dart';
 
 /// Reusable game dialog widget with enhanced styling
@@ -81,6 +82,11 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final dialogMaxWidth = ResponsiveHelper.getDialogMaxWidth(context);
+    final dialogPadding = ResponsiveHelper.getSpacing(context, 24);
+    final titleFontSize = ResponsiveHelper.getFontSize(context, 28);
+    final subtitleFontSize = ResponsiveHelper.getFontSize(context, 18);
+    
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.05),
@@ -90,7 +96,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: GameConstants.maxDialogWidth),
+              constraints: BoxConstraints(maxWidth: dialogMaxWidth),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
@@ -126,7 +132,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(dialogPadding),
                       child: SingleChildScrollView(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
@@ -140,9 +146,12 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                             animation: _glowAnimation,
                             builder: (context, child) {
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveHelper.getSpacing(context, 20),
+                                  vertical: ResponsiveHelper.getSpacing(context, 10),
+                                ),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 20)),
                                   gradient: RadialGradient(
                                     colors: [
                                       AppColors.primary.withOpacity(_glowAnimation.value * 0.3),
@@ -169,7 +178,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                                 widget.title,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 28,
+                                  fontSize: titleFontSize,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   letterSpacing: 1.2,
@@ -187,14 +196,17 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                           
                           // Only show subtitle if it's not empty
                           if (widget.subtitle.isNotEmpty) ...[
-                            const SizedBox(height: 16),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 16)),
                             
                             // Subtitle with enhanced styling
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                vertical: ResponsiveHelper.getSpacing(context, 8),
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.bgDarker.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 12)),
                                 border: Border.all(
                                   color: AppColors.primary.withOpacity(0.2),
                                   width: 1,
@@ -205,7 +217,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.textAccent,
-                                  fontSize: 18,
+                                  fontSize: subtitleFontSize,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
                                   shadows: [
@@ -219,14 +231,14 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                               ),
                             ),
                             
-                            const SizedBox(height: 24),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
                           ] else
-                            const SizedBox(height: 16),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 16)),
                           
                           // Content without background to reduce overflow
                           widget.content,
                           
-                          const SizedBox(height: 24),
+                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
                           
                           // Action buttons with enhanced styling
                           Row(
@@ -234,7 +246,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                             children: widget.actions.map((action) => 
                               Expanded(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: EdgeInsets.symmetric(horizontal: ResponsiveHelper.getSpacing(context, 8)),
                                   child: action,
                                 ),
                               )
@@ -243,17 +255,17 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                           
                           // Close button if enabled
                           if (widget.showCloseButton) ...[
-                            const SizedBox(height: 16),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 16)),
                             GestureDetector(
                               onTap: () {
                                 SoundService.instance.playButtonTap();
                                 Navigator.of(context).pop();
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
                                 decoration: BoxDecoration(
                                   color: AppColors.bgDarker.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 20)),
                                   border: Border.all(
                                     color: AppColors.textMuted.withOpacity(0.3),
                                     width: 1,
@@ -262,7 +274,7 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                                 child: Icon(
                                   Icons.close,
                                   color: AppColors.textMuted,
-                                  size: 20,
+                                  size: ResponsiveHelper.getIconSize(context, 20),
                                 ),
                               ),
                             ),

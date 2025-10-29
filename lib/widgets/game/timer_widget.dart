@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../models/game_state.dart';
 
 /// Timer widget that displays countdown and progress
@@ -38,11 +39,6 @@ class TimerWidget extends StatelessWidget {
       isTimeUp = remainingTime <= 0;
     }
     
-    // Debug: Print timer widget rebuild (only every 5 seconds to reduce spam)
-    if (tick % 5 == 0) {
-      print('🕐 TimerWidget rebuild - Level ${gameState.currentLevel}, Tick: $tick, StartTime: $startTime, TimerPaused: ${gameState.timerPaused}, Now: $now, Remaining: $remainingTime');
-    }
-    
     // Color based on remaining time
     Color timerColor;
     if (remainingTime <= 30) {
@@ -53,8 +49,14 @@ class TimerWidget extends StatelessWidget {
       timerColor = AppColors.primary; // Blue for normal time
     }
 
+    final iconSize = ResponsiveHelper.getTimerIconSize(context);
+    final fontSize = ResponsiveHelper.getTimerFontSize(context);
+    final spacing = ResponsiveHelper.getSpacing(context, 8);
+    final progressBarHeight = ResponsiveHelper.getSpacing(context, 4);
+    final progressBarWidth = ResponsiveHelper.getSpacing(context, 120);
+    
     return Container(
-      margin: const EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: spacing),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -64,25 +66,25 @@ class TimerWidget extends StatelessWidget {
             Icon(
               Icons.timer_outlined,
               color: timerColor,
-              size: 20,
+              size: iconSize,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: spacing),
             Text(
               _formatTime(remainingTime),
               style: TextStyle(
                 color: isTimeUp ? AppColors.error : timerColor,
-                fontSize: 24,
+                fontSize: fontSize,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'monospace',
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: spacing),
         // Progress bar
         Container(
-          height: 4,
-          width: 120,
+          height: progressBarHeight,
+          width: progressBarWidth,
           decoration: BoxDecoration(
             color: AppColors.bgDarker,
             borderRadius: BorderRadius.circular(2),

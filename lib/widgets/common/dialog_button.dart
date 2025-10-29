@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
+import '../../utils/responsive_helper.dart';
 import '../../services/sound_service.dart';
 
 /// Reusable dialog button widget
@@ -23,18 +24,26 @@ class DialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final buttonPadding = EdgeInsets.symmetric(
+      horizontal: ResponsiveHelper.getSpacing(context, 24),
+      vertical: ResponsiveHelper.getSpacing(context, 15),
+    );
+    final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
+    final fontSize = ResponsiveHelper.getFontSize(context, 14);
+    
     return ElevatedButton(
       onPressed: _handlePressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: isSecondary ? AppColors.textMuted : AppColors.primary,
         foregroundColor: AppColors.bgDark,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+        padding: buttonPadding,
+        minimumSize: Size(0, ResponsiveHelper.getButtonHeight(context)),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(GameConstants.borderRadius),
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
-        textStyle: const TextStyle(
+        textStyle: TextStyle(
           fontWeight: FontWeight.w700,
-          fontSize: 14,
+          fontSize: fontSize,
           letterSpacing: 0.3,
         ),
       ),

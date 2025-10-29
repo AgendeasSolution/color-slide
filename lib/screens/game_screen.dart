@@ -5,6 +5,7 @@ import '../constants/game_constants.dart';
 import '../models/level.dart';
 import '../models/game_state.dart';
 import '../utils/game_logic.dart';
+import '../utils/responsive_helper.dart';
 import '../widgets/common/game_dialog.dart';
 import '../widgets/common/dialog_button.dart';
 import '../widgets/common/ad_banner.dart';
@@ -129,8 +130,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _handleTimeUp() {
-    print('⏰ Time up detected - playing fail sound');
-    
     // Stop the timer first
     _stopGameTimer();
     
@@ -157,24 +156,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Game Core Logic
   //============================================================================
   void _startNewGame() {
-    print('🎮 _startNewGame called for Level ${_gameState.currentLevel}');
     setState(() {
       final currentConfig = GameLevels.levels[_gameState.currentLevel - 1];
       final solvedBoard = GameLogic.createSolvedBoard(currentConfig);
-      
-      // Validate that the solved board has no adjacent same colors
-      final bool isValidDistribution = GameLogic.validateBoardDistribution(
-        solvedBoard, 
-        currentConfig.gridSize
-      );
-      
-      if (!isValidDistribution) {
-        print('❌ CRITICAL: Solved board has adjacent same colors!');
-        GameLogic.printBoardDebug(solvedBoard, currentConfig.gridSize);
-      } else {
-        print('✅ Solved board distribution is valid - no adjacent same colors');
-        GameLogic.printBoardDebug(solvedBoard, currentConfig.gridSize);
-      }
       
       final shuffleResult = GameLogic.shuffleBoard(
         solvedBoard,
@@ -189,7 +173,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       );
       
       if (!isShuffledValid) {
-        print('⚠️ Shuffled board has adjacent same colors, using original solved board');
         // Use the original solved board if shuffle created adjacencies
         _gameState = _gameState.copyWith(
           currentConfig: currentConfig,
@@ -205,7 +188,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           timeUp: false,
         );
       } else {
-        print('✅ Shuffled board is valid - no adjacent same colors');
         _gameState = _gameState.copyWith(
           currentConfig: currentConfig,
           boardState: shuffleResult['boardState'],
@@ -345,8 +327,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
 
   void _nextLevel() async {
-    print('🔄 Next Level called - Current Level: ${_gameState.currentLevel}');
-    
     // Ensure timer is stopped before starting new level
     _stopGameTimer();
     
@@ -362,19 +342,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           timeUp: false,
         );
       });
-      print('🔄 Starting new game for Level ${_gameState.currentLevel}');
       
       // Show interstitial ad with 100% probability for next level
       final adShown = await InterstitialAdService.instance.showAdAlways(
         onAdDismissed: () {
-          print('🔄 NEXT LEVEL AD DISMISSED - Starting new game');
           _startNewGame();
         }
       );
       
       // If ad was not shown (loading error), start game immediately
       if (!adShown) {
-        print('🔄 Next level ad not shown, starting game immediately');
         _startNewGame();
       }
     } else {
@@ -511,31 +488,31 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           children: [
             Icon(
               Icons.timer_off,
-              size: 48,
+              size: ResponsiveHelper.getIconSize(context, 48),
               color: AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(
               "Level ${_gameState.currentLevel}",
-              style: const TextStyle(
-                fontSize: 18,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getFontSize(context, 18),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
             Text(
               "Time Limit: ${_gameState.currentConfig.timeLimitMinutes} minutes",
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getFontSize(context, 14),
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
             Text(
               "Moves Made: ${_gameState.moves}",
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getFontSize(context, 14),
                 color: AppColors.textSecondary,
               ),
             ),
@@ -569,15 +546,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   //============================================================================
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    
-    // Responsive layout adjustments
-    final double horizontalPadding = screenWidth > GameConstants.tabletBreakpoint 
-        ? GameConstants.horizontalPaddingTablet 
-        : GameConstants.horizontalPaddingMobile;
-    final double maxBoardWidth = screenWidth > GameConstants.tabletBreakpoint 
-        ? GameConstants.maxBoardWidthTablet 
-        : GameConstants.maxBoardWidthMobile;
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+    final maxBoardWidth = ResponsiveHelper.getMaxBoardWidth(context);
+    final verticalPadding = ResponsiveHelper.getVerticalPadding(context);
 
     return Scaffold(
       body: Stack(
@@ -636,7 +607,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     padding: EdgeInsets.only(
                       left: horizontalPadding,
                       right: horizontalPadding,
-                      bottom: GameConstants.verticalPadding,
+                      bottom: verticalPadding,
                     ),
                     child: Stack(
                       children: [
@@ -654,7 +625,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         // Timer below header
                         if (_gameState.boardState.isNotEmpty && !_gameState.gameWon && !_gameState.gameOver)
                           Positioned(
-                            top: 80, // Adjust based on header height
+                            top: ResponsiveHelper.getButtonHeight(context) + ResponsiveHelper.getSpacing(context, 12),
                             left: 0,
                             right: 0,
                             child: Builder(
@@ -677,7 +648,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                   constraints: BoxConstraints(maxWidth: maxBoardWidth),
                                   child: ColorIndicators(config: _gameState.currentConfig),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
                                 ConstrainedBox(
                                   constraints: BoxConstraints(maxWidth: maxBoardWidth),
                                   child: GameBoard(

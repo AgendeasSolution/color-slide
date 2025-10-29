@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 import '../constants/app_colors.dart';
 import '../constants/game_constants.dart';
+import '../utils/responsive_helper.dart';
 import '../widgets/common/game_dialog.dart';
 import '../widgets/common/dialog_button.dart';
 import '../widgets/common/ad_banner.dart';
@@ -12,40 +13,6 @@ import '../services/progress_service.dart';
 import '../services/sound_service.dart';
 import '../models/level.dart';
 import 'game_screen.dart';
-
-/// Particle class for background animation
-class Particle {
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double size;
-  Color color;
-  double opacity;
-  double life;
-  double maxLife;
-
-  Particle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
-    required this.size,
-    required this.color,
-    required this.opacity,
-    required this.life,
-    required this.maxLife,
-  });
-
-  void update() {
-    x += vx;
-    y += vy;
-    life -= 0.01;
-    opacity = ((life / maxLife) * 0.8).clamp(0.0, 1.0);
-  }
-
-  bool get isDead => life <= 0;
-}
 
 /// Home screen widget - main entry point of the app
 class HomeScreen extends StatefulWidget {
@@ -60,20 +27,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _floatController;
   late AnimationController _glowController;
-  late AnimationController _particleController;
   
   late Animation<double> _pulseAnimation;
   late Animation<double> _floatAnimation;
   late Animation<double> _glowAnimation;
-  late Animation<double> _particleAnimation;
   
   // Level selector state
   List<bool> _levelUnlocked = [];
   List<bool> _levelCompleted = [];
   bool _isLoadingProgress = true;
-  
-  // Particle system
-  List<Particle> _particles = [];
   
   // Sound state
   bool _isSoundEnabled = true;
@@ -82,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _initializeAnimations();
-    // _initializeParticles(); // Disabled to prevent crashes
     _initializeSoundService();
     _loadProgress();
     _loadSoundState();
@@ -119,7 +80,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _pulseController.dispose();
     _floatController.dispose();
     _glowController.dispose();
-    // _particleController.dispose(); // Disabled
     super.dispose();
   }
 
@@ -144,11 +104,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
     )..repeat(reverse: true);
     
-    // _particleController = AnimationController(
-    //   duration: const Duration(seconds: 1),
-    //   vsync: this,
-    // )..repeat();
-    
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -160,34 +115,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
-    
-    // _particleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-    //   CurvedAnimation(parent: _particleController, curve: Curves.linear),
-    // );
-  }
-
-  void _initializeParticles() {
-    _particles = List.generate(20, (index) {
-      final random = math.Random();
-      return Particle(
-        x: random.nextDouble() * 400,
-        y: random.nextDouble() * 800,
-        vx: (random.nextDouble() - 0.5) * 0.3,
-        vy: (random.nextDouble() - 0.5) * 0.3,
-        size: random.nextDouble() * 2 + 1,
-        color: [
-          AppColors.neonBlue,
-          AppColors.neonPink,
-          AppColors.neonGreen,
-          AppColors.neonPurple,
-          AppColors.primary,
-          AppColors.secondary,
-        ][random.nextInt(6)],
-        opacity: (random.nextDouble() * 0.4 + 0.3).clamp(0.0, 1.0),
-        life: random.nextDouble() * 50 + 30,
-        maxLife: random.nextDouble() * 50 + 30,
-      );
-    });
   }
 
   Future<void> _loadProgress() async {
@@ -252,14 +179,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 
 
-  Widget _buildLevelGrid(bool isTablet) {
+  Widget _buildLevelGrid(BuildContext context) {
     if (_isLoadingProgress) {
+      final loadingPadding = ResponsiveHelper.getSpacing(context, 20);
+      final loadingSpacing = ResponsiveHelper.getSpacing(context, 20);
+      
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(loadingPadding),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -271,21 +201,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    spreadRadius: 5,
+                    blurRadius: ResponsiveHelper.getSpacing(context, 20),
+                    spreadRadius: ResponsiveHelper.getSpacing(context, 5),
                   ),
                 ],
               ),
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                strokeWidth: 4,
+                strokeWidth: ResponsiveHelper.getSpacing(context, 4),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: loadingSpacing),
             Text(
               'Loading Levels...',
               style: TextStyle(
-                fontSize: isTablet ? 20 : 18,
+                fontSize: ResponsiveHelper.getFontSize(context, 18),
                 color: AppColors.textAccent,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.5,
@@ -303,14 +233,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
+    final crossAxisCount = ResponsiveHelper.getLevelGridCrossAxisCount(context);
+    final gridSpacing = ResponsiveHelper.getSpacing(context, 12);
+
     return SingleChildScrollView(
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 4 : 3,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: gridSpacing,
+          mainAxisSpacing: gridSpacing,
           childAspectRatio: 1.0,
         ),
         itemCount: GameLevels.levels.length,
@@ -319,13 +252,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           final isUnlocked = _levelUnlocked[index];
           final isCompleted = _levelCompleted[index];
           
-          return _buildLevelCard(level, isUnlocked, isCompleted, isTablet);
+          return _buildLevelCard(context, level, isUnlocked, isCompleted);
         },
       ),
     );
   }
 
-  Widget _buildLevelCard(Level level, bool isUnlocked, bool isCompleted, bool isTablet) {
+  Widget _buildLevelCard(BuildContext context, Level level, bool isUnlocked, bool isCompleted) {
     return GestureDetector(
               onTap: isUnlocked ? () {
                 _onLevelSelected(level.level);
@@ -402,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Text(
                               '${level.level}',
                               style: TextStyle(
-                                fontSize: isTablet ? 28 : 24,
+                                fontSize: ResponsiveHelper.getFontSize(context, 24),
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
                                 shadows: [
@@ -414,12 +347,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveHelper.getSpacing(context, 8),
+                                vertical: ResponsiveHelper.getSpacing(context, 4),
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.neonGreen.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 12)),
                                 border: Border.all(
                                   color: AppColors.neonGreen.withOpacity(0.3),
                                   width: 1,
@@ -428,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Text(
                                 'COMPLETED',
                                 style: TextStyle(
-                                  fontSize: isTablet ? 10 : 8,
+                                  fontSize: ResponsiveHelper.getFontSize(context, 8),
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.neonGreen,
                                   letterSpacing: 1.2,
@@ -445,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ] else if (isUnlocked) ...[
                             // Unlocked level
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
@@ -457,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 boxShadow: [
                                   BoxShadow(
                                     color: _getDifficultyColor(level.level).withOpacity(0.2),
-                                    blurRadius: 8,
+                                    blurRadius: ResponsiveHelper.getSpacing(context, 8),
                                     spreadRadius: 1,
                                   ),
                                 ],
@@ -465,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Text(
                                 '${level.level}',
                                 style: TextStyle(
-                                  fontSize: isTablet ? 32 : 28,
+                                  fontSize: ResponsiveHelper.getFontSize(context, 28),
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   shadows: [
@@ -478,11 +414,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
                             Text(
                               '${level.gridSize}×${level.gridSize}',
                               style: TextStyle(
-                                fontSize: isTablet ? 14 : 12,
+                                fontSize: ResponsiveHelper.getFontSize(context, 12),
                                 color: AppColors.textAccent,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
@@ -495,11 +431,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
                             Text(
                               _getDifficultyText(level.level),
                               style: TextStyle(
-                                fontSize: isTablet ? 10 : 8,
+                                fontSize: ResponsiveHelper.getFontSize(context, 8),
                                 color: _getDifficultyColor(level.level),
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
@@ -515,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ] else ...[
                             // Locked level
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 12)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: AppColors.bgCard.withOpacity(0.3),
@@ -527,14 +463,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Icon(
                                 Icons.lock,
                                 color: AppColors.textMuted,
-                                size: isTablet ? 28 : 24,
+                                size: ResponsiveHelper.getIconSize(context, 24),
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
                             Text(
                               'LOCKED',
                               style: TextStyle(
-                                fontSize: isTablet ? 10 : 8,
+                                fontSize: ResponsiveHelper.getFontSize(context, 8),
                                 color: AppColors.textMuted,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
@@ -597,8 +533,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > GameConstants.tabletBreakpoint;
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+    final verticalPadding = ResponsiveHelper.getVerticalPadding(context);
     
     return Scaffold(
       body: Stack(
@@ -616,20 +552,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Stack(
               children: [
-                // Disabled particle background to prevent crashes
-                // AnimatedBuilder(
-                //   animation: _particleAnimation,
-                //   builder: (context, child) {
-                //     return CustomPaint(
-                //       painter: ParticleBackgroundPainter(
-                //         particles: _particles,
-                //         animation: _particleAnimation.value,
-                //       ),
-                //       size: Size.infinite,
-                //     );
-                //   },
-                // ),
-                
                 // Subtle gradient overlays for depth - less blur
                 Container(
                   decoration: const BoxDecoration(
@@ -669,8 +591,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isTablet ? 24 : 16,
-                      vertical: 20,
+                      horizontal: horizontalPadding,
+                      vertical: verticalPadding,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -715,10 +637,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ).createShader(bounds),
-                            child: Text(
+                                    child: Text(
                                       'COLOR SLIDE',
                               style: TextStyle(
-                                        fontSize: isTablet ? 40 : 32,
+                                        fontSize: ResponsiveHelper.getFontSize(context, 32),
                                         fontWeight: FontWeight.w900,
                                 color: Colors.white,
                                         letterSpacing: 2.5,
@@ -740,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     Text(
                                       'Master the Art of Color',
                                       style: TextStyle(
-                                        fontSize: isTablet ? 18 : 14,
+                                        fontSize: ResponsiveHelper.getFontSize(context, 14),
                                         color: AppColors.textAccent,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 1.2,
@@ -817,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     child: Text(
                                       'SELECT LEVEL',
                                       style: TextStyle(
-                                        fontSize: isTablet ? 20 : 18,
+                                        fontSize: ResponsiveHelper.getFontSize(context, 18),
                                         fontWeight: FontWeight.w900,
                                         color: Colors.white,
                                         letterSpacing: 1.2,
@@ -842,7 +764,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 
                                 // How to Play Button with enhanced styling
                                 Container(
-                                  height: 40,
+                                  height: ResponsiveHelper.getButtonHeight(context),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
                                     gradient: const LinearGradient(
@@ -880,7 +802,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         Text(
                                           'HOW TO PLAY',
                                       style: TextStyle(
-                                        fontSize: isTablet ? 12 : 11,
+                                        fontSize: ResponsiveHelper.getFontSize(context, 11),
                                             fontWeight: FontWeight.w900,
                                             color: Colors.white,
                                             letterSpacing: 1.0,
@@ -908,14 +830,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           
                           // Level Selector Grid
                           Expanded(
-                            child: _buildLevelGrid(isTablet),
+                            child: _buildLevelGrid(context),
                           ),
                           
                           const SizedBox(height: 24),
                           
                           // Sound toggle button
                           Container(
-                            height: isTablet ? 50 : 48,
+                            height: ResponsiveHelper.getButtonHeight(context),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
                               gradient: LinearGradient(
@@ -964,13 +886,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         color: _isSoundEnabled
                                             ? AppColors.primary
                                             : AppColors.textMuted,
-                                        size: isTablet ? 22 : 20,
+                                        size: ResponsiveHelper.getIconSize(context, 20),
                                       ),
-                                      const SizedBox(width: 10),
+                                      SizedBox(width: ResponsiveHelper.getSpacing(context, 10)),
                                       Text(
                                         _isSoundEnabled ? 'SOUND ON' : 'SOUND OFF',
                                         style: TextStyle(
-                                          fontSize: isTablet ? 14 : 12,
+                                          fontSize: ResponsiveHelper.getFontSize(context, 12),
                                           fontWeight: FontWeight.w900,
                                           color: _isSoundEnabled
                                               ? AppColors.primary
@@ -1007,49 +929,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-}
-
-/// Custom painter for particle background animation
-class ParticleBackgroundPainter extends CustomPainter {
-  final List<Particle> particles;
-  final double animation;
-
-  ParticleBackgroundPainter({
-    required this.particles,
-    required this.animation,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final particle in particles) {
-      particle.update();
-      
-      if (particle.isDead) {
-        // Reset particle
-        final random = math.Random();
-        particle.x = random.nextDouble() * size.width;
-        particle.y = random.nextDouble() * size.height;
-        particle.life = particle.maxLife;
-        particle.opacity = 0.8;
-      }
-      
-      // Clamp opacity to valid range
-      final clampedOpacity = particle.opacity.clamp(0.0, 1.0);
-      
-      final paint = Paint()
-        ..color = particle.color.withOpacity(clampedOpacity)
-        ..style = PaintingStyle.fill;
-      
-      canvas.drawCircle(
-        Offset(particle.x, particle.y),
-        particle.size,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 /// Custom painter for level card pattern animation

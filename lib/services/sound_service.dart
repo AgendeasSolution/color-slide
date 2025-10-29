@@ -84,24 +84,19 @@ class SoundService {
   /// Play fail sound (fail_3.mp3) - for game over, time's up, or losing
   Future<void> playFail() async {
     if (!_isSoundEnabled) {
-      print('🔇 Sound is disabled, skipping fail sound');
       return;
     }
     
-    print('🔊 Attempting to play fail sound...');
     try {
       // Stop current playback and reset to beginning for reliable replay
       await _failPlayer.stop();
       await _failPlayer.play(AssetSource('audio/fail_3.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      print('🔊 Fail sound played successfully');
     } catch (e) {
-      print('❌ Error playing fail sound: $e');
       // If stop fails or player is already stopped, just play
       try {
         await _failPlayer.play(AssetSource('audio/fail_3.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-        print('🔊 Fail sound played successfully (retry)');
       } catch (error) {
-        print('❌ Error playing fail sound (retry): $error');
+        // Ignore errors
       }
     }
   }
