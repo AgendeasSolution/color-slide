@@ -601,74 +601,80 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final isTablet = screenWidth > GameConstants.tabletBreakpoint;
     
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bgDark, AppColors.bgDarker],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      body: Stack(
+        children: [
+          // Background gradient - fills entire screen including safe areas
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.bgDark, AppColors.bgDarker],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Stack(
+              children: [
+                // Disabled particle background to prevent crashes
+                // AnimatedBuilder(
+                //   animation: _particleAnimation,
+                //   builder: (context, child) {
+                //     return CustomPaint(
+                //       painter: ParticleBackgroundPainter(
+                //         particles: _particles,
+                //         animation: _particleAnimation.value,
+                //       ),
+                //       size: Size.infinite,
+                //     );
+                //   },
+                // ),
+                
+                // Subtle gradient overlays for depth - less blur
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(-0.8, -0.8),
+                      radius: 1.0,
+                      colors: [
+                        Color(0x15FF6B35),
+                        Color(0x08FF6B35),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0.8, 0.8),
+                      radius: 1.0,
+                      colors: [
+                        Color(0x154ECDC4),
+                        Color(0x084ECDC4),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  // Disabled particle background to prevent crashes
-                  // AnimatedBuilder(
-                  //   animation: _particleAnimation,
-                  //   builder: (context, child) {
-                  //     return CustomPaint(
-                  //       painter: ParticleBackgroundPainter(
-                  //         particles: _particles,
-                  //         animation: _particleAnimation.value,
-                  //       ),
-                  //       size: Size.infinite,
-                  //     );
-                  //   },
-                  // ),
-                  
-                  // Subtle gradient overlays for depth - less blur
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment(-0.8, -0.8),
-                        radius: 1.0,
-                        colors: [
-                          Color(0x15FF6B35),
-                          Color(0x08FF6B35),
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.4, 1.0],
-                      ),
+          // Content with SafeArea
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 24 : 16,
+                      vertical: 20,
                     ),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment(0.8, 0.8),
-                        radius: 1.0,
-                        colors: [
-                          Color(0x154ECDC4),
-                          Color(0x084ECDC4),
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.4, 1.0],
-                      ),
-                    ),
-                  ),
-                  
-                  SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 24 : 16,
-                        vertical: 20,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
                           // Header Section with animated title
                           AnimatedBuilder(
                             animation: _floatAnimation,
@@ -989,16 +995,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                ],
-              ),
+                // Ad Banner at the bottom with proper spacing
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8.0),
+                  child: const AdBanner(),
+                ),
+              ],
             ),
-            // Ad Banner at the bottom with proper spacing
-            Container(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: const AdBanner(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

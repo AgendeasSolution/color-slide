@@ -580,125 +580,131 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         : GameConstants.maxBoardWidthMobile;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bgDark, AppColors.bgDarker],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  // Subtle gradient overlays for depth - matching home screen
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment(-0.8, -0.8),
-                        radius: 1.0,
-                        colors: [
-                          Color(0x15FF6B35),
-                          Color(0x08FF6B35),
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.4, 1.0],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment(0.8, 0.8),
-                        radius: 1.0,
-                        colors: [
-                          Color(0x154ECDC4),
-                          Color(0x084ECDC4),
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.4, 1.0],
-                      ),
-                    ),
-                  ),
-                  SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: horizontalPadding,
-                        right: horizontalPadding,
-                        bottom: GameConstants.verticalPadding,
-                      ),
-                      child: Stack(
-                        children: [
-                          // Header at the top
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: GameHeader(
-                              currentLevel: _gameState.currentLevel,
-                              onReset: _resetToInitialPosition,
-                              onExit: _exitGame,
-                            ),
-                          ),
-                          // Timer below header
-                          if (_gameState.boardState.isNotEmpty && !_gameState.gameWon && !_gameState.gameOver)
-                            Positioned(
-                              top: 80, // Adjust based on header height
-                              left: 0,
-                              right: 0,
-                              child: Builder(
-                                builder: (context) {
-                                  // Only show timer widget if timer is actually running
-                                  if (_gameState.startTime == null) {
-                                    return const SizedBox.shrink(); // Hide timer when not started
-                                  }
-                                  return TimerWidget(gameState: _gameState, tick: _timerTick);
-                                },
-                              ),
-                            ),
-                          // Game board centered in the middle of the screen
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_gameState.boardState.isNotEmpty) ...[
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(maxWidth: maxBoardWidth),
-                                    child: ColorIndicators(config: _gameState.currentConfig),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(maxWidth: maxBoardWidth),
-                                    child: GameBoard(
-                                      config: _gameState.currentConfig,
-                                      boardState: _gameState.boardState,
-                                      emptyCellIndex: _gameState.emptyCellIndex,
-                                      onCellTap: _handleCellTap,
-                                      pulseAnimation: _pulseAnimation,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+      body: Stack(
+        children: [
+          // Background gradient - fills entire screen including safe areas
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.bgDark, AppColors.bgDarker],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            // Ad Banner at the bottom with proper spacing
-            Container(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: const AdBanner(),
+            child: Stack(
+              children: [
+                // Subtle gradient overlays for depth - matching home screen
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(-0.8, -0.8),
+                      radius: 1.0,
+                      colors: [
+                        Color(0x15FF6B35),
+                        Color(0x08FF6B35),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0.8, 0.8),
+                      radius: 1.0,
+                      colors: [
+                        Color(0x154ECDC4),
+                        Color(0x084ECDC4),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          // Content with SafeArea
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: horizontalPadding,
+                      right: horizontalPadding,
+                      bottom: GameConstants.verticalPadding,
+                    ),
+                    child: Stack(
+                      children: [
+                        // Header at the top
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: GameHeader(
+                            currentLevel: _gameState.currentLevel,
+                            onReset: _resetToInitialPosition,
+                            onExit: _exitGame,
+                          ),
+                        ),
+                        // Timer below header
+                        if (_gameState.boardState.isNotEmpty && !_gameState.gameWon && !_gameState.gameOver)
+                          Positioned(
+                            top: 80, // Adjust based on header height
+                            left: 0,
+                            right: 0,
+                            child: Builder(
+                              builder: (context) {
+                                // Only show timer widget if timer is actually running
+                                if (_gameState.startTime == null) {
+                                  return const SizedBox.shrink(); // Hide timer when not started
+                                }
+                                return TimerWidget(gameState: _gameState, tick: _timerTick);
+                              },
+                            ),
+                          ),
+                        // Game board centered in the middle of the screen
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_gameState.boardState.isNotEmpty) ...[
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: maxBoardWidth),
+                                  child: ColorIndicators(config: _gameState.currentConfig),
+                                ),
+                                const SizedBox(height: 12),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: maxBoardWidth),
+                                  child: GameBoard(
+                                    config: _gameState.currentConfig,
+                                    boardState: _gameState.boardState,
+                                    emptyCellIndex: _gameState.emptyCellIndex,
+                                    onCellTap: _handleCellTap,
+                                    pulseAnimation: _pulseAnimation,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Ad Banner at the bottom with proper spacing
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8.0),
+                  child: const AdBanner(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
