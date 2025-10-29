@@ -74,6 +74,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   
   // Particle system
   List<Particle> _particles = [];
+  
+  // Sound state
+  bool _isSoundEnabled = true;
 
   @override
   void initState() {
@@ -82,6 +85,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // _initializeParticles(); // Disabled to prevent crashes
     _initializeSoundService();
     _loadProgress();
+    _loadSoundState();
+  }
+  
+  void _loadSoundState() {
+    setState(() {
+      _isSoundEnabled = SoundService.instance.isSoundEnabled;
+    });
+  }
+  
+  void _toggleSound() {
+    SoundService.instance.playButtonTap();
+    SoundService.instance.toggleSound();
+    setState(() {
+      _isSoundEnabled = SoundService.instance.isSoundEnabled;
+    });
   }
 
   Future<void> _initializeSoundService() async {
@@ -885,6 +903,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           // Level Selector Grid
                           Expanded(
                             child: _buildLevelGrid(isTablet),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Sound toggle button
+                          Container(
+                            height: isTablet ? 50 : 48,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              gradient: LinearGradient(
+                                colors: _isSoundEnabled
+                                    ? [
+                                        AppColors.bgCard.withOpacity(0.2),
+                                        AppColors.bgCardHover.withOpacity(0.1),
+                                      ]
+                                    : [
+                                        AppColors.bgCard.withOpacity(0.15),
+                                        AppColors.bgCardHover.withOpacity(0.08),
+                                      ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                color: _isSoundEnabled
+                                    ? AppColors.primary.withOpacity(0.3)
+                                    : AppColors.textMuted.withOpacity(0.3),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _isSoundEnabled
+                                      ? AppColors.primary.withOpacity(0.15)
+                                      : Colors.black.withOpacity(0.2),
+                                  blurRadius: 12,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _toggleSound,
+                                borderRadius: BorderRadius.circular(24),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                                        color: _isSoundEnabled
+                                            ? AppColors.primary
+                                            : AppColors.textMuted,
+                                        size: isTablet ? 22 : 20,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        _isSoundEnabled ? 'SOUND ON' : 'SOUND OFF',
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 14 : 12,
+                                          fontWeight: FontWeight.w900,
+                                          color: _isSoundEnabled
+                                              ? AppColors.primary
+                                              : AppColors.textMuted,
+                                          letterSpacing: 1.2,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black.withOpacity(0.6),
+                                              offset: const Offset(1, 1),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
