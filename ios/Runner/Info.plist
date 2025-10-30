@@ -50,5 +50,7 @@
 	<!-- AdMob App ID -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3772142815301617~7601912281</string>
+	<key>UIRequiresFullScreen</key>
+    <true/>
 </dict>
 </plist>
