@@ -49,8 +49,12 @@
 	</dict>
 	<!-- AdMob App ID -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3772142815301617~7601912281</string>
+	<string>ca-app-pub-3772142815301617~9598398850</string>
 	<key>UIRequiresFullScreen</key>
     <true/>
+	<key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+    </array>
 </dict>
 </plist>

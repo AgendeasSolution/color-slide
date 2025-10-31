@@ -53,9 +53,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // Preload interstitial ad for better user experience
     InterstitialAdService.instance.preloadAd();
     
-    // Start the game immediately when screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startNewGame();
+    // Show interstitial ad with 50% probability when entering game screen
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final adShown = await InterstitialAdService.instance.showAdWithProbability(
+        onAdDismissed: () {
+          _startNewGame();
+        }
+      );
+      
+      // If ad was NOT shown, start game immediately
+      if (!adShown) {
+        _startNewGame();
+      }
     });
   }
 
@@ -370,14 +379,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // Store navigator context before async operation
     final navigator = Navigator.of(context);
     
-    final adShown = await InterstitialAdService.instance.showAdWithProbability(
+    final adShown = await InterstitialAdService.instance.showAdAlways(
       onAdDismissed: () {
         // Navigate immediately after ad is dismissed using Future.microtask for faster execution
         Future.microtask(() => navigator.pop());
       }
     );
     
-    // If no ad was shown, navigate immediately
+    // If no ad was shown (loading error), navigate immediately
     if (!adShown) {
       Future.microtask(() => navigator.pop());
     }
