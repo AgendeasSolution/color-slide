@@ -50,6 +50,27 @@
 	<!-- AdMob App ID -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3772142815301617~9598398850</string>
+	<!-- Facebook SDK Configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb704870025568535</string>
+			</array>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>704870025568535</string>
+	<key>FacebookDisplayName</key>
+	<string>Color Slide</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-api</string>
+		<string>fbauth2</string>
+		<string>fbshareextension</string>
+	</array>
 	<key>UIRequiresFullScreen</key>
     <true/>
 	<key>UIDeviceFamily</key>
