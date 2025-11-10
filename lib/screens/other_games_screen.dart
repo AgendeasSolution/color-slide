@@ -242,7 +242,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
         color: bannerColor,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor),
-      ),
+                ),
                 child: Row(
         children: [
           Icon(
@@ -403,8 +403,8 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     return 2;
   }
   double _calculateCardAspectRatio(BuildContext context, double cardWidth) {
-    final cardPadding = ResponsiveUtils.getResponsiveSpacing(context, 6);
-    final spacing = ResponsiveUtils.getResponsiveSpacing(context, 2);
+    final cardPadding = ResponsiveUtils.getResponsiveSpacing(context, 4);
+    final spacing = ResponsiveUtils.getResponsiveSpacing(context, 6);
     final buttonHeight = ResponsiveUtils.getResponsiveSpacing(context, 36);
     final textStyle = ResponsiveUtils.getResponsiveTextStyle(
       context,
@@ -415,12 +415,12 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     final fontSize = textStyle.fontSize ?? 16;
     final lineHeight = (textStyle.height ?? 1) * fontSize;
     final textHeight = lineHeight * 2;
+    // Account for doubled spacing (spacing * 2) above and below text = spacing * 4 total
     final totalHeight = ((cardPadding * 2) +
             cardWidth +
             (spacing * 2) +
             buttonHeight +
-            textHeight -
-            ResponsiveUtils.getResponsiveSpacing(context, 12))
+            textHeight)
         .clamp(1, double.infinity);
     return cardWidth / totalHeight;
   }
@@ -432,25 +432,36 @@ class _GameCard extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final cardRadius = BorderRadius.circular(
-      ResponsiveUtils.getResponsiveBorderRadius(context, 18),
-    );
     final cardPadding = ResponsiveUtils.getResponsiveSpacing(context, 10);
     final spacing = ResponsiveUtils.getResponsiveSpacing(context, 6);
     final buttonHeight = ResponsiveUtils.getResponsiveSpacing(context, 36);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.9),
-        borderRadius: cardRadius,
-                        border: Border.all(
-          color: AppColors.border.withOpacity(0.6),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-            color: AppColors.black.withOpacity(0.18),
-                            blurRadius: 12,
-            offset: const Offset(0, 6),
+        borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 24)),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.bgCard.withOpacity(0.1),
+            AppColors.bgCardHover.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -496,10 +507,10 @@ class _GameCard extends StatelessWidget {
                           },
                         )
                       : _PlaceholderArtwork(name: app.name),
-                ),
-              ),
-            ),
-            SizedBox(height: spacing),
+                            ),
+                          ),
+                        ),
+            SizedBox(height: spacing * 2),
             Text(
               app.name,
               textAlign: TextAlign.center,
@@ -512,7 +523,7 @@ class _GameCard extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: spacing),
+            SizedBox(height: spacing * 2),
             SizedBox(
               height: buttonHeight,
               child: ElevatedButton(
@@ -574,15 +585,15 @@ class _GameCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: AppColors.white,
                             letterSpacing: 0.4,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
         ),
       ),
     );
