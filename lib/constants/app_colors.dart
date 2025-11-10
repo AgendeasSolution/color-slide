@@ -60,4 +60,24 @@ class AppColors {
   
   // Card colors
   static const cardDark = Color(0xFF1A1A2E);
+  
+  // Additional colors for other games screen
+  static const background = bgDark;
+  static const surface = bgCard;
+  static const white = Color(0xFFFFFFFF);
+  static const black = Color(0xFF000000);
+  static const border = Color(0xFF2A2A3E);
+  static const surfaceLight = Color(0xFF2A2A3E);
+  static const transparent = Color(0x00000000);
+  
+  // Gradient lists
+  static const List<Color> surfaceGradient = [
+    bgCard,
+    bgCardHover,
+  ];
+  
+  static const List<Color> buttonGradient = [
+    primary,
+    primaryHover,
+  ];
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../constants/game_constants.dart';
 import '../utils/responsive_helper.dart';
@@ -13,6 +14,7 @@ import '../services/progress_service.dart';
 import '../services/sound_service.dart';
 import '../models/level.dart';
 import 'game_screen.dart';
+import 'other_games_screen.dart';
 
 /// Home screen widget - main entry point of the app
 class HomeScreen extends StatefulWidget {
@@ -174,6 +176,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         showCloseButton: false,
       ),
     );
+  }
+
+  void _navigateToMobileGames() {
+    SoundService.instance.playButtonTap();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const OtherGamesScreen(),
+      ),
+    );
+  }
+
+  Future<void> _navigateToWebGames() async {
+    SoundService.instance.playButtonTap();
+    final Uri url = Uri.parse('https://freegametoplay.com');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the website'),
+          ),
+        );
+      }
+    }
   }
 
 
@@ -833,7 +860,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: _buildLevelGrid(context),
                           ),
                           
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 12),
                           
                           // Sound toggle button
                           Container(
@@ -912,6 +939,155 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
+                          ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Mobile Games and Web Games buttons in same row
+                          Row(
+                            children: [
+                              // Mobile Games button
+                              Expanded(
+                                child: Container(
+                                  height: ResponsiveHelper.getButtonHeight(context),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.bgCard.withOpacity(0.2),
+                                        AppColors.bgCardHover.withOpacity(0.1),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.primary.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primary.withOpacity(0.15),
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _navigateToMobileGames,
+                                      borderRadius: BorderRadius.circular(24),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.games,
+                                              color: AppColors.primary,
+                                              size: ResponsiveHelper.getIconSize(context, 18),
+                                            ),
+                                            SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
+                                            Flexible(
+                                              child: Text(
+                                                'MOBILE GAMES',
+                                                style: TextStyle(
+                                                  fontSize: ResponsiveHelper.getFontSize(context, 11),
+                                                  fontWeight: FontWeight.w900,
+                                                  color: AppColors.primary,
+                                                  letterSpacing: 1.0,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: Colors.black.withOpacity(0.6),
+                                                      offset: const Offset(1, 1),
+                                                      blurRadius: 2,
+                                                    ),
+                                                  ],
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              
+                              SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
+                              
+                              // Web Games button
+                              Expanded(
+                                child: Container(
+                                  height: ResponsiveHelper.getButtonHeight(context),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.bgCard.withOpacity(0.2),
+                                        AppColors.bgCardHover.withOpacity(0.1),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.primary.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primary.withOpacity(0.15),
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _navigateToWebGames,
+                                      borderRadius: BorderRadius.circular(24),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.language,
+                                              color: AppColors.primary,
+                                              size: ResponsiveHelper.getIconSize(context, 18),
+                                            ),
+                                            SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
+                                            Flexible(
+                                              child: Text(
+                                                'WEB GAMES',
+                                                style: TextStyle(
+                                                  fontSize: ResponsiveHelper.getFontSize(context, 11),
+                                                  fontWeight: FontWeight.w900,
+                                                  color: AppColors.primary,
+                                                  letterSpacing: 1.0,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: Colors.black.withOpacity(0.6),
+                                                      offset: const Offset(1, 1),
+                                                      blurRadius: 2,
+                                                    ),
+                                                  ],
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
