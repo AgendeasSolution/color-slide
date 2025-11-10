@@ -117,26 +117,56 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
   }
   Future<void> _openStore(FgtpApp app) async {
     _audioService.playMouseClickSound();
-    final platform = Theme.of(context).platform;
-    final primaryUrl = app.primaryStoreUrl(platform);
-    final urls = [
-      if (primaryUrl != null) primaryUrl,
-      ...app.availableStoreUrls.where((url) => url != primaryUrl),
-    ].map(Uri.parse);
-    for (final uri in urls) {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final platform = Theme.of(context).platform;
+      final primaryUrl = app.primaryStoreUrl(platform);
+      final urls = [
+        if (primaryUrl != null) primaryUrl,
+        ...app.availableStoreUrls.where((url) => url != primaryUrl),
+      ].map(Uri.parse);
+      
+      for (final uri in urls) {
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication).catchError((error) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No internet connection. Please check your network and try again.'),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+            });
+            return;
+          }
+        } catch (e) {
+          // Continue to next URL if this one fails
+          continue;
+        }
+      }
+      
+      // If we get here, none of the URLs could be launched
+      if (!mounted) {
         return;
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Please check your network and try again.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Please check your network and try again.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Store link is currently unavailable. Please try again.'),
-      ),
-    );
   }
   @override
   Widget build(BuildContext context) {
