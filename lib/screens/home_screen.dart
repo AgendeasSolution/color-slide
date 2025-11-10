@@ -674,9 +674,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             children: [
                                     // App Title with stunning gradient and glow
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: ResponsiveHelper.getSpacing(context, 20),
+                                        vertical: ResponsiveHelper.getSpacing(context, 10),
+                                      ),
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(30),
+                                        borderRadius: BorderRadius.circular(
+                                          ResponsiveHelper.getBorderRadius(context, 30),
+                                        ),
                                         gradient: const LinearGradient(
                                           colors: [
                                             Color(0x20FF6B35),
@@ -689,8 +694,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         boxShadow: [
                                           BoxShadow(
                                             color: AppColors.primary.withOpacity(0.3),
-                                            blurRadius: 30,
-                                            spreadRadius: 5,
+                                            blurRadius: ResponsiveHelper.getSpacing(context, 30),
+                                            spreadRadius: ResponsiveHelper.getSpacing(context, 5),
                                           ),
                                         ],
                                       ),
@@ -714,8 +719,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         shadows: [
                                           Shadow(
                                             color: Colors.black.withOpacity(0.5),
-                                            offset: const Offset(2, 2),
-                                            blurRadius: 8,
+                                            offset: Offset(
+                                              ResponsiveHelper.getSpacing(context, 2),
+                                              ResponsiveHelper.getSpacing(context, 2),
+                                            ),
+                                            blurRadius: ResponsiveHelper.getSpacing(context, 8),
                                           ),
                                         ],
                                       ),
@@ -723,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                                 
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
                                     
                                     // Subtitle
                                     Text(
@@ -736,28 +744,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         shadows: [
                                           Shadow(
                                             color: Colors.black.withOpacity(0.8),
-                                            offset: const Offset(1, 1),
-                                            blurRadius: 2,
+                                            offset: Offset(
+                                              ResponsiveHelper.getSpacing(context, 1),
+                                              ResponsiveHelper.getSpacing(context, 1),
+                                            ),
+                                            blurRadius: ResponsiveHelper.getSpacing(context, 2),
                                           ),
                                         ],
                                 ),
                               ),
                               
-                              const SizedBox(height: 12),
+                              SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
                             ],
                                 ),
                               );
                             },
                           ),
                           
-                          const SizedBox(height: 24),
+                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
                           
                           // Level Selector Grid
                           Expanded(
                             child: _buildLevelGrid(context),
                           ),
                           
-                          const SizedBox(height: 12),
+                          SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
                           
                           // Sound and How to Play buttons in same row (icon-only, square)
                           Center(
@@ -782,14 +793,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     border: Border.all(
                                       color: AppColors.primary.withOpacity(0.3),
-                                      width: 1.5,
+                                      width: ResponsiveHelper.getSpacing(context, 1.5),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppColors.primary.withOpacity(0.15),
-                                        blurRadius: 12,
-                                        spreadRadius: 1,
-                                        offset: const Offset(0, 4),
+                                        blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                        spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                        offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
                                       ),
                                     ],
                                   ),
@@ -836,16 +847,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       color: _isSoundEnabled
                                           ? AppColors.primary.withOpacity(0.3)
                                           : AppColors.textMuted.withOpacity(0.3),
-                                      width: 1.5,
+                                      width: ResponsiveHelper.getSpacing(context, 1.5),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: _isSoundEnabled
                                             ? AppColors.primary.withOpacity(0.15)
                                             : Colors.black.withOpacity(0.2),
-                                        blurRadius: 12,
-                                        spreadRadius: 1,
-                                        offset: const Offset(0, 4),
+                                        blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                        spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                        offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
                                       ),
                                     ],
                                   ),
@@ -870,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           
-                          const SizedBox(height: 24),
+                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
                           
                           // Explore More Games Heading (centered)
                           Center(
@@ -879,22 +890,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               children: [
                                 Icon(
                                   Icons.info_outline,
-                                  size: ResponsiveHelper.getIconSize(context, 18),
+                                  size: ResponsiveHelper.getIconSize(context, 16),
                                   color: AppColors.primary,
                                 ),
                                 SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
                                 Text(
                                   'Explore More Games',
                                   style: TextStyle(
-                                    fontSize: ResponsiveHelper.getFontSize(context, 18),
+                                    fontSize: ResponsiveHelper.getFontSize(context, 14),
                                     fontWeight: FontWeight.w900,
                                     color: AppColors.textPrimary,
                                     letterSpacing: 1.2,
                                     shadows: [
                                       Shadow(
                                         color: Colors.black.withOpacity(0.8),
-                                        offset: const Offset(1, 1),
-                                        blurRadius: 2,
+                                        offset: Offset(
+                                          ResponsiveHelper.getSpacing(context, 1),
+                                          ResponsiveHelper.getSpacing(context, 1),
+                                        ),
+                                        blurRadius: ResponsiveHelper.getSpacing(context, 2),
                                       ),
                                     ],
                                   ),
@@ -903,7 +917,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           
-                          const SizedBox(height: 10),
+                          SizedBox(height: ResponsiveHelper.getSpacing(context, 10)),
                           
                           // Mobile Games and Web Games buttons in same row (not full width)
                           Center(
@@ -915,13 +929,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Mobile Games button (purple)
-                                  Container(
-                                    constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.42,
-                                    ),
-                                    height: ResponsiveHelper.getButtonHeight(context),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(24),
+                                  Flexible(
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: ResponsiveHelper.screenWidth(context) * 0.42,
+                                      ),
+                                      height: ResponsiveHelper.getButtonHeight(context),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          ResponsiveHelper.getBorderRadius(context, 24),
+                                        ),
                                       gradient: LinearGradient(
                                         colors: [
                                           AppColors.neonPurple.withOpacity(0.8),
@@ -932,14 +949,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                       border: Border.all(
                                         color: AppColors.neonPurple.withOpacity(0.5),
-                                        width: 1.5,
+                                        width: ResponsiveHelper.getSpacing(context, 1.5),
                                       ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: AppColors.neonPurple.withOpacity(0.3),
-                                          blurRadius: 12,
-                                          spreadRadius: 1,
-                                          offset: const Offset(0, 4),
+                                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
                                         ),
                                       ],
                                     ),
@@ -947,9 +964,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: _navigateToMobileGames,
-                                        borderRadius: BorderRadius.circular(24),
+                                        borderRadius: BorderRadius.circular(
+                                          ResponsiveHelper.getBorderRadius(context, 24),
+                                        ),
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                          ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment: MainAxisAlignment.center,
@@ -960,20 +981,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 size: ResponsiveHelper.getIconSize(context, 20),
                                               ),
                                               SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                              Text(
-                                                'Mobile Games',
-                                                style: TextStyle(
-                                                  fontSize: ResponsiveHelper.getFontSize(context, 12),
-                                                  fontWeight: FontWeight.w900,
-                                                  color: Colors.white,
-                                                  letterSpacing: 1.0,
-                                                  shadows: [
-                                                    Shadow(
-                                                      color: Colors.black.withOpacity(0.6),
-                                                      offset: const Offset(1, 1),
-                                                      blurRadius: 2,
-                                                    ),
-                                                  ],
+                                              Flexible(
+                                                child: Text(
+                                                  'Mobile Games',
+                                                  style: TextStyle(
+                                                    fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                    fontWeight: FontWeight.w900,
+                                                    color: Colors.white,
+                                                    letterSpacing: 1.0,
+                                                    shadows: [
+                                                      Shadow(
+                                                        color: Colors.black.withOpacity(0.6),
+                                                        offset: const Offset(1, 1),
+                                                        blurRadius: 2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -982,17 +1006,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
+                                  ),
                                   
                                   SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
                                   
                                   // Web Games button (blue)
-                                  Container(
-                                    constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.42,
-                                    ),
-                                    height: ResponsiveHelper.getButtonHeight(context),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(24),
+                                  Flexible(
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: ResponsiveHelper.screenWidth(context) * 0.42,
+                                      ),
+                                      height: ResponsiveHelper.getButtonHeight(context),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          ResponsiveHelper.getBorderRadius(context, 24),
+                                        ),
                                       gradient: LinearGradient(
                                         colors: [
                                           AppColors.secondary.withOpacity(0.8),
@@ -1003,14 +1031,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                       border: Border.all(
                                         color: AppColors.secondary.withOpacity(0.5),
-                                        width: 1.5,
+                                        width: ResponsiveHelper.getSpacing(context, 1.5),
                                       ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: AppColors.secondary.withOpacity(0.3),
-                                          blurRadius: 12,
-                                          spreadRadius: 1,
-                                          offset: const Offset(0, 4),
+                                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
                                         ),
                                       ],
                                     ),
@@ -1018,9 +1046,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: _navigateToWebGames,
-                                        borderRadius: BorderRadius.circular(24),
+                                        borderRadius: BorderRadius.circular(
+                                          ResponsiveHelper.getBorderRadius(context, 24),
+                                        ),
                                         child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                          ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1031,20 +1063,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 size: ResponsiveHelper.getIconSize(context, 20),
                                               ),
                                               SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                              Text(
-                                                'Web Games',
-                                                style: TextStyle(
-                                                  fontSize: ResponsiveHelper.getFontSize(context, 12),
-                                                  fontWeight: FontWeight.w900,
-                                                  color: Colors.white,
-                                                  letterSpacing: 1.0,
-                                                  shadows: [
-                                                    Shadow(
-                                                      color: Colors.black.withOpacity(0.6),
-                                                      offset: const Offset(1, 1),
-                                                      blurRadius: 2,
-                                                    ),
-                                                  ],
+                                              Flexible(
+                                                child: Text(
+                                                  'Web Games',
+                                                  style: TextStyle(
+                                                    fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                    fontWeight: FontWeight.w900,
+                                                    color: Colors.white,
+                                                    letterSpacing: 1.0,
+                                                    shadows: [
+                                                      Shadow(
+                                                        color: Colors.black.withOpacity(0.6),
+                                                        offset: const Offset(1, 1),
+                                                        blurRadius: 2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -1052,6 +1087,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                       ),
                                     ),
+                                  ),
                                   ),
                                 ],
                               ),
@@ -1063,7 +1099,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 // Ad Banner at the bottom with proper spacing
                 Container(
-                  margin: const EdgeInsets.only(bottom: 8.0),
+                  margin: EdgeInsets.only(bottom: ResponsiveHelper.getSpacing(context, 8)),
                   child: const AdBanner(),
                 ),
               ],
