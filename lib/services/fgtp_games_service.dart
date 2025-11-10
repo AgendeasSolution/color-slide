@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/fgtp_app_model.dart';
+import 'connectivity_service.dart';
 
 /// Exception for no internet connection
 class NoInternetException implements Exception {
@@ -12,10 +13,17 @@ class NoInternetException implements Exception {
 class FgtpGamesService {
   static const String _apiUrl = 'https://api.freegametoplay.com/apps';
   static const String _currentGameName = 'Color Slide';
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   /// Fetch mobile games from the API
   /// Returns list of games excluding the current game
   Future<List<FgtpApp>> fetchMobileGames({bool forceRefresh = false}) async {
+    // Check internet connectivity before making API call
+    final hasInternet = await _connectivityService.hasInternetConnection();
+    if (!hasInternet) {
+      throw NoInternetException('No internet connection. Please check your network and try again.');
+    }
+
     try {
       final response = await http.get(
         Uri.parse(_apiUrl),

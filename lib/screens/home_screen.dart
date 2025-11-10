@@ -12,6 +12,7 @@ import '../widgets/common/ad_banner.dart';
 import '../widgets/dialogs/how_to_play_content.dart';
 import '../services/progress_service.dart';
 import '../services/sound_service.dart';
+import '../services/connectivity_service.dart';
 import '../models/level.dart';
 import 'game_screen.dart';
 import 'other_games_screen.dart';
@@ -41,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   
   // Sound state
   bool _isSoundEnabled = true;
+  
+  // Connectivity service
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   @override
   void initState() {
@@ -189,6 +193,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _navigateToWebGames() async {
     SoundService.instance.playButtonTap();
+    
+    // Check internet connectivity before attempting to open URL
+    final hasInternet = await _connectivityService.hasInternetConnection();
+    if (!hasInternet) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No internet connection. Please check your network and try again.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+    
     try {
       final Uri url = Uri.parse('https://freegametoplay.com');
       if (await canLaunchUrl(url)) {
@@ -196,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('No internet connection. Please check your network and try again.'),
+                content: Text('Unable to open website. Please try again.'),
                 duration: Duration(seconds: 3),
               ),
             );
@@ -206,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No internet connection. Please check your network and try again.'),
+              content: Text('Unable to open website. Please try again.'),
               duration: Duration(seconds: 3),
             ),
           );
@@ -216,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No internet connection. Please check your network and try again.'),
+            content: Text('Unable to open website. Please try again.'),
             duration: Duration(seconds: 3),
           ),
         );

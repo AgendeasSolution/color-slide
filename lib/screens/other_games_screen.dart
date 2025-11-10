@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../components/common/animated_background.dart';
@@ -7,6 +6,7 @@ import '../constants/app_constants.dart';
 import '../models/fgtp_app_model.dart';
 import '../services/audio_service.dart';
 import '../services/fgtp_games_service.dart' show FgtpGamesService, NoInternetException;
+import '../services/connectivity_service.dart';
 import '../constants/app_colors.dart';
 import '../utils/responsive_utils.dart';
 import '../utils/responsive_helper.dart';
@@ -24,6 +24,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
   late final AnimationController _bgController;
   late final AudioService _audioService;
   late final FgtpGamesService _gamesService;
+  final ConnectivityService _connectivityService = ConnectivityService();
   List<FgtpApp> _games = const [];
   List<FgtpApp>? _cachedGames;
   bool _isLoading = true;
@@ -117,6 +118,21 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
   }
   Future<void> _openStore(FgtpApp app) async {
     _audioService.playMouseClickSound();
+    
+    // Check internet connectivity before attempting to open store URL
+    final hasInternet = await _connectivityService.hasInternetConnection();
+    if (!hasInternet) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No internet connection. Please check your network and try again.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+    
     try {
       final platform = Theme.of(context).platform;
       final primaryUrl = app.primaryStoreUrl(platform);
@@ -132,7 +148,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('No internet connection. Please check your network and try again.'),
+                    content: Text('Unable to open store. Please try again.'),
                     duration: Duration(seconds: 3),
                   ),
                 );
@@ -152,7 +168,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No internet connection. Please check your network and try again.'),
+          content: Text('Unable to open store. Please try again.'),
           duration: Duration(seconds: 3),
         ),
       );
@@ -162,7 +178,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No internet connection. Please check your network and try again.'),
+          content: Text('Unable to open store. Please try again.'),
           duration: Duration(seconds: 3),
         ),
       );
