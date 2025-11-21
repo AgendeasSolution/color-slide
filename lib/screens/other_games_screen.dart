@@ -49,6 +49,8 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     super.dispose();
   }
   Future<void> _loadGames({bool forceRefresh = false}) async {
+    if (!mounted) return;
+    
     setState(() {
       if (!_isLoading) {
         _isLoading = true;

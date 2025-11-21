@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -9,8 +10,12 @@ void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  // Initialize Firebase with error handling
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    // Game continues normally if Firebase fails
+  }
   
   // Initialize OneSignal with App ID (optional - game works without notifications)
   try {
@@ -19,37 +24,54 @@ void main() async {
     // Request notification permissions (optional - game continues regardless)
     // Use catchError to ensure game doesn't crash if permission is denied
     OneSignal.Notifications.requestPermission(true).catchError((error) {
-      print('OneSignal permission request failed (game continues normally): $error');
+      // Game continues normally if permission request fails
     });
     
-    // Set up notification handlers (optional - game works without these)
-    OneSignal.Notifications.addClickListener((event) {
-      // Handle notification click - optional
-      print('OneSignal notification clicked: ${event.notification.notificationId}');
-    });
-    
-    // Handle notification received while app is in foreground
-    OneSignal.Notifications.addForegroundWillDisplayListener((event) {
-      // Show the notification if permission was granted
-      print('OneSignal notification received in foreground: ${event.notification.notificationId}');
-      event.notification.display();
-    });
+      // Set up notification handlers (optional - game works without these)
+      try {
+        OneSignal.Notifications.addClickListener((event) {
+          // Handle notification click - optional
+        });
+        
+        // Handle notification received while app is in foreground
+        OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+          // Show the notification if permission was granted
+          try {
+            event.notification.display();
+          } catch (e) {
+            // Silently handle display error
+          }
+        });
+      } catch (e) {
+        // Silently handle listener setup error
+      }
+    } catch (e) {
+      // If OneSignal initialization fails, game continues normally
+    }
+  
+  // Initialize Google Mobile Ads SDK with error handling
+  try {
+    await MobileAds.instance.initialize();
   } catch (e) {
-    // If OneSignal initialization fails, game continues normally
-    print('OneSignal initialization failed (game continues normally): $e');
+    // Game continues normally if MobileAds fails
   }
   
-  // Initialize Google Mobile Ads SDK
-  await MobileAds.instance.initialize();
+  // Set preferred orientations with error handling
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (e) {
+    // Silently handle orientation error
+  }
   
-  // Set preferred orientations
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
-  // Hide system UI for immersive experience
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // Hide system UI for immersive experience with error handling
+  try {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  } catch (e) {
+    // Silently handle system UI error
+  }
   
   runApp(const ColorSlideGame());
 }
@@ -71,7 +93,7 @@ class ColorSlideGame extends StatelessWidget {
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
-          child: child!,
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );

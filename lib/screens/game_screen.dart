@@ -14,7 +14,6 @@ import '../widgets/game/color_indicators.dart';
 import '../widgets/game/game_board.dart';
 import '../widgets/game/timer_widget.dart';
 import '../widgets/dialogs/how_to_play_content.dart';
-import '../widgets/dialogs/stats_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
 import '../services/interstitial_ad_service.dart';
@@ -93,20 +92,67 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _initializeGameState() {
-    final levelIndex = (widget.selectedLevel ?? 1) - 1;
-    final currentConfig = GameLevels.levels[levelIndex];
-    _gameState = GameState(
-      currentLevel: widget.selectedLevel ?? 1,
-      currentConfig: currentConfig,
-      boardState: [],
-      initialBoardState: [],
-      emptyCellIndex: -1,
-      initialEmptyCellIndex: -1,
-      gameWon: false,
-      gameOver: false,
-      moves: 0,
-      timeUp: false,
-    );
+    try {
+      final selectedLevel = widget.selectedLevel ?? 1;
+      // Validate level is within bounds
+      if (selectedLevel < 1 || selectedLevel > GameLevels.levels.length) {
+        final levelIndex = 0;
+        final currentConfig = GameLevels.levels[levelIndex];
+        _gameState = GameState(
+          currentLevel: 1,
+          currentConfig: currentConfig,
+          boardState: [],
+          initialBoardState: [],
+          emptyCellIndex: -1,
+          initialEmptyCellIndex: -1,
+          gameWon: false,
+          gameOver: false,
+          moves: 0,
+          timeUp: false,
+        );
+        return;
+      }
+      
+      final levelIndex = selectedLevel - 1;
+      if (levelIndex < 0 || levelIndex >= GameLevels.levels.length) {
+        return;
+      }
+      
+      final currentConfig = GameLevels.levels[levelIndex];
+      _gameState = GameState(
+        currentLevel: selectedLevel,
+        currentConfig: currentConfig,
+        boardState: [],
+        initialBoardState: [],
+        emptyCellIndex: -1,
+        initialEmptyCellIndex: -1,
+        gameWon: false,
+        gameOver: false,
+        moves: 0,
+        timeUp: false,
+      );
+    } catch (e) {
+      // Default to level 1 on error
+      if (GameLevels.levels.isNotEmpty) {
+        try {
+          final currentConfig = GameLevels.levels[0];
+          _gameState = GameState(
+            currentLevel: 1,
+            currentConfig: currentConfig,
+            boardState: [],
+            initialBoardState: [],
+            emptyCellIndex: -1,
+            initialEmptyCellIndex: -1,
+            gameWon: false,
+            gameOver: false,
+            moves: 0,
+            timeUp: false,
+          );
+        } catch (e2) {
+          // Game state will remain uninitialized - caller should handle
+        }
+      }
+    }
   }
 
   //============================================================================
@@ -143,20 +189,34 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _stopGameTimer();
     
     // Play fail sound immediately (fire and forget, like win sound)
-    SoundService.instance.playFail();
+    try {
+      SoundService.instance.playFail();
+    } catch (e) {
+      // Silently handle sound error
+    }
     
-    setState(() {
-      _gameState = _gameState.copyWith(
-        gameOver: true,
-        timeUp: true,
-        endTime: DateTime.now(),
-      );
-    });
+    if (mounted) {
+      try {
+        setState(() {
+          _gameState = _gameState.copyWith(
+            gameOver: true,
+            timeUp: true,
+            endTime: DateTime.now(),
+          );
+        });
+      } catch (e) {
+        // Silently handle state update error
+      }
+    }
     
     // Small delay to ensure sound starts playing before dialog appears
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) {
-        _showTimeUpDialog();
+        try {
+          _showTimeUpDialog();
+        } catch (e) {
+          // Silently handle dialog error
+        }
       }
     });
   }
@@ -165,77 +225,108 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Game Core Logic
   //============================================================================
   void _startNewGame() {
-    setState(() {
-      final currentConfig = GameLevels.levels[_gameState.currentLevel - 1];
-      final solvedBoard = GameLogic.createSolvedBoard(currentConfig);
-      
-      final shuffleResult = GameLogic.shuffleBoard(
-        solvedBoard,
-        solvedBoard.length - 1,
-        currentConfig,
-      );
-      
-      // Validate the shuffled board
-      final bool isShuffledValid = GameLogic.validateBoardDistribution(
-        shuffleResult['boardState'], 
-        currentConfig.gridSize
-      );
-      
-      if (!isShuffledValid) {
-        // Use the original solved board if shuffle created adjacencies
-        _gameState = _gameState.copyWith(
-          currentConfig: currentConfig,
-          boardState: solvedBoard,
-          initialBoardState: List.from(solvedBoard),
-          emptyCellIndex: solvedBoard.length - 1,
-          initialEmptyCellIndex: solvedBoard.length - 1,
-          gameWon: false,
-          gameOver: false,
-          moves: 0,
-          startTime: DateTime.now(),
-          endTime: null,
-          timeUp: false,
-        );
-      } else {
-        _gameState = _gameState.copyWith(
-          currentConfig: currentConfig,
-          boardState: shuffleResult['boardState'],
-          initialBoardState: List.from(shuffleResult['boardState']),
-          emptyCellIndex: shuffleResult['emptyCellIndex'],
-          initialEmptyCellIndex: shuffleResult['emptyCellIndex'],
-          gameWon: false,
-          gameOver: false,
-          moves: 0,
-          startTime: DateTime.now(),
-          endTime: null,
-          timeUp: false,
-        );
+    try {
+      // Validate level bounds before accessing
+      final currentLevel = _gameState.currentLevel;
+      if (currentLevel < 1 || currentLevel > GameLevels.levels.length) {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+        return;
       }
-    });
-    
-    // Start the game timer AFTER setState
-    _startGameTimer();
+      
+      final levelIndex = currentLevel - 1;
+      if (levelIndex < 0 || levelIndex >= GameLevels.levels.length) {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+      
+        setState(() {
+          final currentConfig = GameLevels.levels[levelIndex];
+          final solvedBoard = GameLogic.createSolvedBoard(currentConfig);
+        
+          final shuffleResult = GameLogic.shuffleBoard(
+            solvedBoard,
+            solvedBoard.length - 1,
+            currentConfig,
+          );
+          
+          // Validate the shuffled board
+          final bool isShuffledValid = GameLogic.validateBoardDistribution(
+            shuffleResult['boardState'], 
+            currentConfig.gridSize
+          );
+          
+          if (!isShuffledValid) {
+            // Use the original solved board if shuffle created adjacencies
+            _gameState = _gameState.copyWith(
+              currentConfig: currentConfig,
+              boardState: solvedBoard,
+              initialBoardState: List.from(solvedBoard),
+              emptyCellIndex: solvedBoard.length - 1,
+              initialEmptyCellIndex: solvedBoard.length - 1,
+              gameWon: false,
+              gameOver: false,
+              moves: 0,
+              startTime: DateTime.now(),
+              endTime: null,
+              timeUp: false,
+            );
+          } else {
+            _gameState = _gameState.copyWith(
+              currentConfig: currentConfig,
+              boardState: shuffleResult['boardState'],
+              initialBoardState: List.from(shuffleResult['boardState']),
+              emptyCellIndex: shuffleResult['emptyCellIndex'],
+              initialEmptyCellIndex: shuffleResult['emptyCellIndex'],
+              gameWon: false,
+              gameOver: false,
+              moves: 0,
+              startTime: DateTime.now(),
+              endTime: null,
+              timeUp: false,
+            );
+          }
+        });
+        
+        // Start the game timer AFTER setState
+        _startGameTimer();
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      }
   }
 
   void _resetToInitialPosition() async {
+    if (!mounted) return;
+    
     // Stop the current timer completely before showing ad
     _stopGameTimer();
     
     // Reset the game state
-    setState(() {
-      _gameState = _gameState.copyWith(
-        boardState: List.from(_gameState.initialBoardState),
-        emptyCellIndex: _gameState.initialEmptyCellIndex,
-        gameWon: false,
-        gameOver: false,
-        moves: 0,
-        startTime: null, // No start time - timer not running
-        endTime: null,
-        timeUp: false,
-        timerPaused: false,
-      );
-      _timerTick = 0;
-    });
+    if (mounted) {
+      try {
+        setState(() {
+          _gameState = _gameState.copyWith(
+            boardState: List.from(_gameState.initialBoardState),
+            emptyCellIndex: _gameState.initialEmptyCellIndex,
+            gameWon: false,
+            gameOver: false,
+            moves: 0,
+            startTime: null, // No start time - timer not running
+            endTime: null,
+            timeUp: false,
+            timerPaused: false,
+          );
+          _timerTick = 0;
+        });
+      } catch (e) {
+        // Silently handle reset error
+      }
+    }
     
     // Show interstitial ad with 50% probability and callback
     final adShown = await InterstitialAdService.instance.showAdWithProbability(
@@ -251,18 +342,30 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _startTimerAfterAd() {
+    if (!mounted) return;
+    
     // Preload next ad for better user experience
-    InterstitialAdService.instance.preloadAd();
+    try {
+      InterstitialAdService.instance.preloadAd();
+    } catch (e) {
+      // Silently handle ad preload error
+    }
     
     // Start the timer fresh after ad is finished
     final freshStartTime = DateTime.now();
-    setState(() {
-      _gameState = _gameState.copyWith(
-        startTime: freshStartTime,
-        timerPaused: false,
-      );
-      _timerTick = 0;
-    });
+    if (mounted) {
+      try {
+        setState(() {
+          _gameState = _gameState.copyWith(
+            startTime: freshStartTime,
+            timerPaused: false,
+          );
+          _timerTick = 0;
+        });
+      } catch (e) {
+        // Silently handle timer start error
+      }
+    }
     
     // Start the timer
     _startGameTimer();
@@ -286,18 +389,28 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _moveBall(int fromIndex, int toIndex) {
-    final moveResult = GameLogic.moveBall(_gameState.boardState, fromIndex, toIndex);
+    if (!mounted) return;
     
-    setState(() {
-      _gameState = _gameState.copyWith(
-        boardState: moveResult['boardState'],
-        emptyCellIndex: moveResult['emptyCellIndex'],
-        moves: _gameState.moves + 1,
-      );
-    });
+    try {
+      final moveResult = GameLogic.moveBall(_gameState.boardState, fromIndex, toIndex);
+      
+      if (mounted) {
+        setState(() {
+          _gameState = _gameState.copyWith(
+            boardState: moveResult['boardState'],
+            emptyCellIndex: moveResult['emptyCellIndex'],
+            moves: _gameState.moves + 1,
+          );
+        });
+      }
 
-    // Use a short delay to allow the UI to update before checking for win
-    Timer(GameConstants.winCheckDelay, _checkWinCondition);
+      // Use a short delay to allow the UI to update before checking for win
+      if (mounted) {
+        Timer(GameConstants.winCheckDelay, _checkWinCondition);
+      }
+    } catch (e) {
+      // Silently handle move error
+    }
   }
 
   void _checkWinCondition() {
@@ -307,50 +420,84 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _handleWin() async {
+    if (!mounted) return;
+    
     // Stop the timer
     _stopGameTimer();
     
     // Play win sound
-    SoundService.instance.playWin();
+    try {
+      SoundService.instance.playWin();
+    } catch (e) {
+      // Silently handle sound error
+    }
     
-    setState(() {
-      _gameState = _gameState.copyWith(
-        gameWon: true,
-        gameOver: true,
-        endTime: DateTime.now(),
-      );
-    });
+    if (mounted) {
+      try {
+        setState(() {
+          _gameState = _gameState.copyWith(
+            gameWon: true,
+            gameOver: true,
+            endTime: DateTime.now(),
+          );
+        });
+      } catch (e) {
+        // Silently handle state update error
+      }
+    }
     
     // Save level completion progress
-    final progressService = ProgressService.instance;
-    await progressService.completeLevel(_gameState.currentLevel);
+    try {
+      final progressService = ProgressService.instance;
+      await progressService.completeLevel(_gameState.currentLevel);
+    } catch (e) {
+      // Silently handle progress save error
+    }
     
     // Notify home screen that a level was completed
-    if (widget.onLevelCompleted != null) {
-      widget.onLevelCompleted!();
+    try {
+      if (widget.onLevelCompleted != null) {
+        widget.onLevelCompleted!();
+      }
+    } catch (e) {
+      // Silently handle callback error
     }
     
     // Show game over dialog
-    _showGameOverDialog();
+    if (mounted) {
+      try {
+        _showGameOverDialog();
+      } catch (e) {
+        // Silently handle dialog error
+      }
+    }
   }
 
 
   void _nextLevel() async {
+    if (!mounted) return;
+    
     // Ensure timer is stopped before starting new level
     _stopGameTimer();
     
     if (_gameState.currentLevel < GameLevels.levels.length) {
-      setState(() {
-        _gameState = _gameState.copyWith(
-          currentLevel: _gameState.currentLevel + 1,
-          gameWon: false,
-          gameOver: false,
-          moves: 0,
-          startTime: null, // Don't set startTime here, let _startNewGame handle it
-          endTime: null,
-          timeUp: false,
-        );
-      });
+      if (mounted) {
+        try {
+          setState(() {
+            _gameState = _gameState.copyWith(
+              currentLevel: _gameState.currentLevel + 1,
+              gameWon: false,
+              gameOver: false,
+              moves: 0,
+              startTime: null, // Don't set startTime here, let _startNewGame handle it
+              endTime: null,
+              timeUp: false,
+            );
+          });
+        } catch (e) {
+          // Silently handle state update error
+        }
+      }
       
       // Show interstitial ad with 100% probability for next level
       final adShown = await InterstitialAdService.instance.showAdAlways(

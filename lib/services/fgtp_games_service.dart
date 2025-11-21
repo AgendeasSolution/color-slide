@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/fgtp_app_model.dart';
 import 'connectivity_service.dart';
@@ -35,16 +36,38 @@ class FgtpGamesService {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body) as Map<String, dynamic>;
-        final gamesResponse = jsonData['data'] as List<dynamic>;
+        try {
+          final jsonData = json.decode(response.body);
+          
+          // Validate JSON structure
+          if (jsonData is! Map<String, dynamic>) {
+            throw Exception('Invalid response format: expected Map');
+          }
+          
+          final gamesResponse = jsonData['data'];
+          if (gamesResponse is! List) {
+            throw Exception('Invalid response format: data is not a list');
+          }
 
-        // Convert to FgtpApp and filter out current game
-        final games = gamesResponse
-            .map((item) => FgtpApp.fromJson(item as Map<String, dynamic>))
-            .where((app) => app.name != _currentGameName)
-            .toList();
+          // Convert to FgtpApp and filter out current game with error handling
+          final games = <FgtpApp>[];
+          for (final item in gamesResponse) {
+            try {
+              if (item is Map<String, dynamic>) {
+                final app = FgtpApp.fromJson(item);
+                if (app.name != _currentGameName) {
+                  games.add(app);
+                }
+              }
+            } catch (e) {
+              // Continue with next item
+            }
+          }
 
-        return games;
+          return games;
+        } catch (e) {
+          throw Exception('Failed to parse games data: $e');
+        }
       } else {
         throw Exception('Failed to load games: ${response.statusCode}');
       }

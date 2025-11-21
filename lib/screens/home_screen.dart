@@ -13,7 +13,9 @@ import '../widgets/dialogs/how_to_play_content.dart';
 import '../services/progress_service.dart';
 import '../services/sound_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/update_service.dart';
 import '../models/level.dart';
+import '../widgets/update_popup.dart';
 import 'game_screen.dart';
 import 'other_games_screen.dart';
 
@@ -45,6 +47,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   
   // Connectivity service
   final ConnectivityService _connectivityService = ConnectivityService();
+  
+  // Update state
+  bool _showUpdatePopup = false;
+  final UpdateService _updateService = UpdateService();
 
   @override
   void initState() {
@@ -53,25 +59,64 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _initializeSoundService();
     _loadProgress();
     _loadSoundState();
+    _checkForUpdate();
   }
   
   void _loadSoundState() {
-    setState(() {
-      _isSoundEnabled = SoundService.instance.isSoundEnabled;
-    });
+    if (mounted) {
+      try {
+        setState(() {
+          _isSoundEnabled = SoundService.instance.isSoundEnabled;
+        });
+      } catch (e) {
+        // Silently handle sound state error
+      }
+    }
   }
   
   void _toggleSound() {
-    SoundService.instance.playButtonTap();
-    SoundService.instance.toggleSound();
-    setState(() {
-      _isSoundEnabled = SoundService.instance.isSoundEnabled;
-    });
+    try {
+      SoundService.instance.playButtonTap();
+      SoundService.instance.toggleSound();
+      if (mounted) {
+        setState(() {
+          _isSoundEnabled = SoundService.instance.isSoundEnabled;
+        });
+      }
+    } catch (e) {
+      // Silently handle sound toggle error
+    }
   }
 
   Future<void> _initializeSoundService() async {
-    await SoundService.instance.init();
+    try {
+      await SoundService.instance.init();
+    } catch (e) {
+      // Game continues without sound
+    }
   }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final hasUpdate = await _updateService.checkForUpdate();
+      if (mounted) {
+        setState(() {
+          _showUpdatePopup = hasUpdate;
+        });
+      }
+    } catch (e) {
+      // Silently fail - don't show popup if check fails
+    }
+  }
+
+  void _dismissUpdatePopup() {
+    if (mounted) {
+      setState(() {
+        _showUpdatePopup = false;
+      });
+    }
+  }
+
 
   @override
   void didChangeDependencies() {
@@ -124,45 +169,99 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _loadProgress() async {
-    final progressService = ProgressService.instance;
-    await progressService.init();
-    
-    final unlocked = <bool>[];
-    final completed = <bool>[];
-    
-    for (int i = 0; i < GameLevels.levels.length; i++) {
-      final level = i + 1;
-      final isUnlocked = await progressService.isLevelUnlocked(level);
-      final isCompleted = await progressService.isLevelCompleted(level);
+    try {
+      final progressService = ProgressService.instance;
+      await progressService.init();
       
-      unlocked.add(isUnlocked);
-      completed.add(isCompleted);
+      final unlocked = <bool>[];
+      final completed = <bool>[];
+      
+      // Ensure we don't exceed level bounds
+      final levelCount = GameLevels.levels.length;
+      if (levelCount == 0) {
+        if (mounted) {
+          setState(() {
+            _levelUnlocked = [];
+            _levelCompleted = [];
+            _isLoadingProgress = false;
+          });
+        }
+        return;
+      }
+      
+      for (int i = 0; i < levelCount; i++) {
+        try {
+          final level = i + 1;
+          final isUnlocked = await progressService.isLevelUnlocked(level);
+          final isCompleted = await progressService.isLevelCompleted(level);
+          
+          unlocked.add(isUnlocked);
+          completed.add(isCompleted);
+        } catch (e) {
+          // Default to locked and not completed on error
+          unlocked.add(i == 0); // First level always unlocked
+          completed.add(false);
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _levelUnlocked = unlocked;
+          _levelCompleted = completed;
+          _isLoadingProgress = false;
+        });
+      }
+    } catch (e) {
+      // Initialize with default values
+      if (mounted) {
+        setState(() {
+          final levelCount = GameLevels.levels.length;
+          _levelUnlocked = List.generate(levelCount, (index) => index == 0);
+          _levelCompleted = List.filled(levelCount, false);
+          _isLoadingProgress = false;
+        });
+      }
     }
-    
-    setState(() {
-      _levelUnlocked = unlocked;
-      _levelCompleted = completed;
-      _isLoadingProgress = false;
-    });
   }
 
   void _onLevelSelected(int level) async {
-    SoundService.instance.playButtonTap();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => GameScreen(
-          selectedLevel: level,
-          onLevelCompleted: () {
-            // Refresh progress immediately when a level is completed
-            _loadProgress();
-          },
+    // Safety check: validate level is within bounds
+    if (level < 1 || level > GameLevels.levels.length) {
+      return;
+    }
+    
+    try {
+      SoundService.instance.playButtonTap();
+    } catch (e) {
+      // Silently handle sound error
+    }
+    
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GameScreen(
+            selectedLevel: level,
+            onLevelCompleted: () {
+              // Refresh progress immediately when a level is completed
+              if (mounted) {
+                _loadProgress();
+              }
+            },
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   void _showHowToPlay() {
-    SoundService.instance.playButtonTap();
+    try {
+      SoundService.instance.playButtonTap();
+    } catch (e) {
+      // Silently handle sound error
+    }
+    
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (context) => GameDialog(
@@ -173,7 +272,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           DialogButton(
             text: "Got it!",
             onPressed: () {
-              Navigator.of(context).pop();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
         ],
@@ -183,7 +284,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _navigateToMobileGames() {
-    SoundService.instance.playButtonTap();
+    try {
+      SoundService.instance.playButtonTap();
+    } catch (e) {
+      // Silently handle sound error
+    }
+    
+    if (!mounted) return;
+    
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const OtherGamesScreen(),
@@ -192,20 +300,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _navigateToWebGames() async {
-    SoundService.instance.playButtonTap();
+    try {
+      SoundService.instance.playButtonTap();
+    } catch (e) {
+      // Silently handle sound error
+    }
+    
+    if (!mounted) return;
     
     // Check internet connectivity before attempting to open URL
-    final hasInternet = await _connectivityService.hasInternetConnection();
-    if (!hasInternet) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No internet connection. Please check your network and try again.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
+    try {
+      final hasInternet = await _connectivityService.hasInternetConnection();
+      if (!hasInternet) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No internet connection. Please check your network and try again.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
       }
-      return;
+    } catch (e) {
+      // Continue anyway - let URL launcher handle it
     }
     
     try {
@@ -315,9 +433,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         itemCount: GameLevels.levels.length,
         itemBuilder: (context, index) {
+          // Safety check: ensure index is valid
+          if (index < 0 || index >= GameLevels.levels.length) {
+            return const SizedBox.shrink();
+          }
+          
           final level = GameLevels.levels[index];
-          final isUnlocked = _levelUnlocked[index];
-          final isCompleted = _levelCompleted[index];
+          
+          // Safety check: ensure arrays are properly sized
+          final isUnlocked = (index < _levelUnlocked.length) ? _levelUnlocked[index] : false;
+          final isCompleted = (index < _levelCompleted.length) ? _levelCompleted[index] : false;
           
           return _buildLevelCard(context, level, isUnlocked, isCompleted);
         },
@@ -348,13 +473,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
-                    : null,
-                  color: isUnlocked ? null : AppColors.bgCard.withOpacity(0.2),
+                    : LinearGradient(
+                        colors: [
+                          AppColors.bgCard.withOpacity(0.3),
+                          AppColors.bgCardHover.withOpacity(0.2),
+                          AppColors.textMuted.withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                 border: Border.all(
                   color: isUnlocked
                         ? AppColors.primary.withOpacity(0.2)
-                        : AppColors.textMuted.withOpacity(0.2),
-                  width: 1,
+                        : AppColors.textMuted.withOpacity(0.4),
+                  width: isUnlocked ? 1 : 1.5,
                 ),
                 boxShadow: isUnlocked
                     ? [
@@ -371,7 +503,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             offset: const Offset(0, 4),
                         ),
                       ]
-                    : null,
+                    : [
+                        BoxShadow(
+                          color: AppColors.textMuted.withOpacity(0.15),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 0.5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Stack(
                 children: [
@@ -521,15 +666,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 12)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.bgCard.withOpacity(0.3),
+                                gradient: RadialGradient(
+                                  colors: [
+                                    AppColors.secondary.withOpacity(0.25),
+                                    AppColors.bgCard.withOpacity(0.3),
+                                  ],
+                                ),
                                 border: Border.all(
-                                  color: AppColors.textMuted.withOpacity(0.3),
+                                  color: AppColors.secondary.withOpacity(0.6),
                                   width: 2,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.secondary.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
                               ),
                               child: Icon(
                                 Icons.lock,
-                                color: AppColors.textMuted,
+                                color: AppColors.secondary,
                                 size: ResponsiveHelper.getIconSize(context, 24),
                               ),
                             ),
@@ -1105,6 +1262,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
+          // Update Pop-up at the bottom
+          if (_showUpdatePopup)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: UpdatePopup(
+                onDismiss: _dismissUpdatePopup,
+              ),
+            ),
         ],
       ),
     );
