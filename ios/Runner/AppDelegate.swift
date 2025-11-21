@@ -10,6 +10,9 @@ import FBSDKCoreKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     ApplicationDelegate.shared.application(application, didFinishLaunchingWithOptions: launchOptions)
+    
+    // OneSignal is initialized in main.dart - do not initialize here to avoid duplicate prompts
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
