@@ -12,7 +12,6 @@ import '../widgets/common/ad_banner.dart';
 import '../widgets/game/game_header.dart';
 import '../widgets/game/color_indicators.dart';
 import '../widgets/game/game_board.dart';
-import '../widgets/game/timer_widget.dart';
 import '../widgets/dialogs/how_to_play_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
@@ -39,7 +38,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Game State
   late GameState _gameState;
   
-  // Timer
+  // Timer (disabled - clock removed)
   Timer? _gameTimer;
   int _timerTick = 0; // Force UI updates
 
@@ -159,24 +158,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Timer Management
   //============================================================================
   void _startGameTimer() {
+    // Timer disabled - clock removed from game
+    // Timer logic kept for potential future use but time-up checking is disabled
     _gameTimer?.cancel();
     _timerTick = 0; // Reset tick counter
-    _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted && _gameState.startTime != null) {
-        setState(() {
-          // Increment tick to force UI update
-          _timerTick++;
-          
-          // Check if time is up using real-time calculation
-          final now = DateTime.now();
-          final elapsed = now.difference(_gameState.startTime!).inSeconds;
-          final remaining = _gameState.currentConfig.timeLimitMinutes * 60 - elapsed;
-          if (remaining <= 0 && !_gameState.gameWon && !_gameState.gameOver) {
-            _handleTimeUp();
-          }
-        });
-      }
-    });
+    // Timer periodic callback removed - no time-up checking
   }
 
   void _stopGameTimer() {
@@ -184,42 +170,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _gameTimer = null;
   }
 
-  void _handleTimeUp() {
-    // Stop the timer first
-    _stopGameTimer();
-    
-    // Play fail sound immediately (fire and forget, like win sound)
-    try {
-      SoundService.instance.playFail();
-    } catch (e) {
-      // Silently handle sound error
-    }
-    
-    if (mounted) {
-      try {
-        setState(() {
-          _gameState = _gameState.copyWith(
-            gameOver: true,
-            timeUp: true,
-            endTime: DateTime.now(),
-          );
-        });
-      } catch (e) {
-        // Silently handle state update error
-      }
-    }
-    
-    // Small delay to ensure sound starts playing before dialog appears
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (mounted) {
-        try {
-          _showTimeUpDialog();
-        } catch (e) {
-          // Silently handle dialog error
-        }
-      }
-    });
-  }
+  // _handleTimeUp method removed - clock removed from game
 
   //============================================================================
   // Game Core Logic
@@ -632,68 +583,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _showTimeUpDialog() {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => GameDialog(
-        title: "Time's Up!",
-        subtitle: "Don't worry, you can try again!",
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.timer_off,
-              size: ResponsiveHelper.getIconSize(context, 48),
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "Level ${_gameState.currentLevel}",
-              style: TextStyle(
-                fontSize: ResponsiveHelper.getFontSize(context, 18),
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
-            Text(
-              "Time Limit: ${_gameState.currentConfig.timeLimitMinutes} minutes",
-              style: TextStyle(
-                fontSize: ResponsiveHelper.getFontSize(context, 14),
-                color: AppColors.textSecondary,
-              ),
-            ),
-            SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
-            Text(
-              "Moves Made: ${_gameState.moves}",
-              style: TextStyle(
-                fontSize: ResponsiveHelper.getFontSize(context, 14),
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          DialogButton(
-            text: "Try Again",
-            onPressed: () {
-              Navigator.of(context).pop();
-              _resetToInitialPosition();
-            },
-          ),
-          DialogButton(
-            text: "Home",
-            onPressed: () {
-              Navigator.of(context).pop();
-              _goToLevelSelector();
-            },
-          ),
-        ],
-        showCloseButton: false,
-      ),
-    );
-  }
+  // _showTimeUpDialog method removed - clock removed from game
 
 
 
@@ -778,22 +668,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             onExit: _exitGame,
                           ),
                         ),
-                        // Timer below header
-                        if (_gameState.boardState.isNotEmpty && !_gameState.gameWon && !_gameState.gameOver)
-                          Positioned(
-                            top: ResponsiveHelper.getButtonHeight(context) + ResponsiveHelper.getSpacing(context, 12),
-                            left: 0,
-                            right: 0,
-                            child: Builder(
-                              builder: (context) {
-                                // Only show timer widget if timer is actually running
-                                if (_gameState.startTime == null) {
-                                  return const SizedBox.shrink(); // Hide timer when not started
-                                }
-                                return TimerWidget(gameState: _gameState, tick: _timerTick);
-                              },
-                            ),
-                          ),
+                        // Timer widget removed - clock removed from game
                         // Game board centered in the middle of the screen
                         Center(
                           child: Column(
