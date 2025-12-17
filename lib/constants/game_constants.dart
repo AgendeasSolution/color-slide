@@ -78,9 +78,9 @@ class GameConstants {
   static const double dialogVerticalPadding = 30.0;
   
   // Level grid cross axis counts
-  static const int levelGridCrossAxisCountMobile = 3;
+  static const int levelGridCrossAxisCountMobile = 4;
   static const int levelGridCrossAxisCountTablet = 4;
-  static const int levelGridCrossAxisCountLargeTablet = 5;
+  static const int levelGridCrossAxisCountLargeTablet = 4;
   
   // Timer widget sizes
   static const double timerIconSizeMobile = 20.0;

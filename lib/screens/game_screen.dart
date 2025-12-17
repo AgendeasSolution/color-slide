@@ -207,7 +207,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           // Validate the shuffled board
           final bool isShuffledValid = GameLogic.validateBoardDistribution(
             shuffleResult['boardState'], 
-            currentConfig.gridSize
+            currentConfig.columns,
+            currentConfig.rows,
           );
           
           if (!isShuffledValid) {
@@ -334,7 +335,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _handleCellTap(int index) {
     if (_gameState.gameWon || _gameState.gameOver || _gameState.boardState[index] == null) return;
 
-    if (GameLogic.isAdjacent(index, _gameState.emptyCellIndex, _gameState.currentConfig.gridSize)) {
+    if (GameLogic.isAdjacent(index, _gameState.emptyCellIndex, _gameState.currentConfig.columns, _gameState.currentConfig.rows)) {
       _moveBall(index, _gameState.emptyCellIndex);
     }
   }

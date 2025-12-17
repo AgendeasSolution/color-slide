@@ -419,7 +419,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     final crossAxisCount = ResponsiveHelper.getLevelGridCrossAxisCount(context);
-    final gridSpacing = ResponsiveHelper.getSpacing(context, 12);
+    final gridSpacing = ResponsiveHelper.getSpacing(context, 8);
 
     return SingleChildScrollView(
       child: GridView.builder(
@@ -457,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               } : null,
             child: Container(
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                 gradient: isUnlocked
                     ? LinearGradient(
                         colors: isCompleted
@@ -547,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Text(
                               '${level.level}',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 24),
+                                fontSize: ResponsiveHelper.getFontSize(context, 18),
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
                                 shadows: [
@@ -559,15 +559,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
                             Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveHelper.getSpacing(context, 8),
-                                vertical: ResponsiveHelper.getSpacing(context, 4),
+                                horizontal: ResponsiveHelper.getSpacing(context, 6),
+                                vertical: ResponsiveHelper.getSpacing(context, 2),
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.neonGreen.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 12)),
+                                borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 8)),
                                 border: Border.all(
                                   color: AppColors.neonGreen.withOpacity(0.3),
                                   width: 1,
@@ -576,7 +576,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Text(
                                 'COMPLETED',
                                 style: TextStyle(
-                                  fontSize: ResponsiveHelper.getFontSize(context, 8),
+                                  fontSize: ResponsiveHelper.getFontSize(context, 7),
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.neonGreen,
                                   letterSpacing: 1.2,
@@ -593,7 +593,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ] else if (isUnlocked) ...[
                             // Unlocked level
                             Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 6)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
@@ -605,7 +605,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 boxShadow: [
                                   BoxShadow(
                                     color: _getDifficultyColor(level.level).withOpacity(0.2),
-                                    blurRadius: ResponsiveHelper.getSpacing(context, 8),
+                                    blurRadius: ResponsiveHelper.getSpacing(context, 6),
                                     spreadRadius: 1,
                                   ),
                                 ],
@@ -613,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Text(
                                 '${level.level}',
                                 style: TextStyle(
-                                  fontSize: ResponsiveHelper.getFontSize(context, 28),
+                                  fontSize: ResponsiveHelper.getFontSize(context, 20),
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   shadows: [
@@ -626,11 +626,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
                             Text(
-                              '${level.gridSize}×${level.gridSize}',
+                              '${level.columns}×${level.rows}',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                fontSize: ResponsiveHelper.getFontSize(context, 10),
                                 color: AppColors.textAccent,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.0,
@@ -643,11 +643,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 1)),
                             Text(
                               _getDifficultyText(level.level),
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 8),
+                                fontSize: ResponsiveHelper.getFontSize(context, 7),
                                 color: _getDifficultyColor(level.level),
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
@@ -663,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ] else ...[
                             // Locked level
                             Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 12)),
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
@@ -679,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.secondary.withOpacity(0.3),
-                                    blurRadius: 8,
+                                    blurRadius: 6,
                                     spreadRadius: 1,
                                   ),
                                 ],
@@ -687,14 +687,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Icon(
                                 Icons.lock,
                                 color: AppColors.secondary,
-                                size: ResponsiveHelper.getIconSize(context, 24),
+                                size: ResponsiveHelper.getIconSize(context, 18),
                               ),
                             ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
                             Text(
                               'LOCKED',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 8),
+                                fontSize: ResponsiveHelper.getFontSize(context, 7),
                                 color: AppColors.textMuted,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
@@ -715,11 +715,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     // Difficulty indicator - no animation
                     if (isUnlocked && !isCompleted)
                       Positioned(
-                        top: 12,
-                        right: 12,
+                        top: 8,
+                        right: 8,
                         child: Container(
-                          width: 12,
-                          height: 12,
+                          width: 8,
+                          height: 8,
                           decoration: BoxDecoration(
                             color: _getDifficultyColor(level.level),
                             shape: BoxShape.circle,
@@ -731,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (!isUnlocked)
                     Container(
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(16),
                           color: Colors.black.withOpacity(0.4),
                         ),
                       ),
@@ -885,31 +885,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ],
                                       ),
                               ),
-                            ),
+                                    ),
                           ),
-                                
-                                    SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
-                                    
-                                    // Subtitle
-                                    Text(
-                                      'Master the Art of Color',
-                                      style: TextStyle(
-                                        fontSize: ResponsiveHelper.getFontSize(context, 14),
-                                        color: AppColors.textAccent,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 1.2,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black.withOpacity(0.8),
-                                            offset: Offset(
-                                              ResponsiveHelper.getSpacing(context, 1),
-                                              ResponsiveHelper.getSpacing(context, 1),
-                                            ),
-                                            blurRadius: ResponsiveHelper.getSpacing(context, 2),
-                                          ),
-                                        ],
-                                ),
-                              ),
                               
                               SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
                             ],

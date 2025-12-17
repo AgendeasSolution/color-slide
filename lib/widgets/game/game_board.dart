@@ -58,13 +58,13 @@ class GameBoard extends StatelessWidget {
             ],
           ),
           child: AspectRatio(
-            aspectRatio: 1,
+            aspectRatio: config.columns / config.rows,
             child: Padding(
               padding: EdgeInsets.all(padding),
               child: GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: config.gridSize,
+                  crossAxisCount: config.columns,
                   crossAxisSpacing: gridSpacing,
                   mainAxisSpacing: gridSpacing,
                 ),

@@ -6,7 +6,7 @@ class GameLogic {
   /// Creates a solved board state for the given level configuration
   /// Ensures no two same-colored balls are adjacent (horizontally, vertically, or diagonally)
   static List<String?> createSolvedBoard(Level config) {
-    final int boardSize = config.gridSize * config.gridSize;
+    final int boardSize = config.columns * config.rows;
     List<String?> solvedState = List.filled(boardSize, null);
     
     // Set the empty cell at the end
@@ -20,7 +20,8 @@ class GameLogic {
 
   /// Generates a valid board using advanced backtracking with constraint propagation
   static void _generateColumnWiseValidBoard(List<String?> board, Level config) {
-    final int gridSize = config.gridSize;
+    final int columns = config.columns;
+    final int rows = config.rows;
     final int emptyIndex = board.length - 1;
     
     // Calculate how many times each color should appear
@@ -44,7 +45,7 @@ class GameLogic {
     }
     
     // Sort positions by constraint level (most constrained first)
-    positions.sort((a, b) => _getConstraintLevel(b, gridSize, emptyIndex) - _getConstraintLevel(a, gridSize, emptyIndex));
+    positions.sort((a, b) => _getConstraintLevel(b, columns, rows, emptyIndex) - _getConstraintLevel(a, columns, rows, emptyIndex));
     
     // Use backtracking to place colors
     bool success = _backtrackWithSmartPlacement(board, config, colorCounts, positions, 0, emptyIndex);
@@ -55,9 +56,9 @@ class GameLogic {
   }
 
   /// Calculates constraint level for a position (number of neighbors)
-  static int _getConstraintLevel(int index, int gridSize, int emptyIndex) {
-    final int row = index ~/ gridSize;
-    final int col = index % gridSize;
+  static int _getConstraintLevel(int index, int columns, int rows, int emptyIndex) {
+    final int row = index ~/ columns;
+    final int col = index % columns;
     int constraints = 0;
     
     // Count neighbors
@@ -68,8 +69,8 @@ class GameLogic {
         final int newRow = row + dr;
         final int newCol = col + dc;
         
-        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-          final int neighborIndex = newRow * gridSize + newCol;
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+          final int neighborIndex = newRow * columns + newCol;
           if (neighborIndex != emptyIndex) {
             constraints++;
           }
@@ -140,7 +141,8 @@ class GameLogic {
 
   /// Fallback method that guarantees a solution
   static void _generateFallbackBoard(List<String?> board, Level config, int emptyIndex) {
-    final int gridSize = config.gridSize;
+    final int columns = config.columns;
+    final int rows = config.rows;
     
     // Use a simple alternating pattern that minimizes adjacencies
     List<String> colors = List.from(config.colors);
@@ -149,8 +151,8 @@ class GameLogic {
     for (int i = 0; i < board.length; i++) {
       if (i != emptyIndex) {
         // Use a checkerboard-like pattern
-        int row = i ~/ gridSize;
-        int col = i % gridSize;
+        int row = i ~/ columns;
+        int col = i % columns;
         
         // Alternate colors in a pattern that minimizes adjacencies
         if ((row + col) % 2 == 0) {
@@ -187,9 +189,10 @@ class GameLogic {
     String color,
     int emptyIndex,
   ) {
-    final int gridSize = config.gridSize;
-    final int row = index ~/ gridSize;
-    final int col = index % gridSize;
+    final int columns = config.columns;
+    final int rows = config.rows;
+    final int row = index ~/ columns;
+    final int col = index % columns;
     
     // Check all 8 directions around the position
     for (int dr = -1; dr <= 1; dr++) {
@@ -200,8 +203,8 @@ class GameLogic {
         final int newCol = col + dc;
         
         // Check bounds
-        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-          final int neighborIndex = newRow * gridSize + newCol;
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+          final int neighborIndex = newRow * columns + newCol;
           
           // Skip empty cell
           if (neighborIndex == emptyIndex) continue;
@@ -231,7 +234,7 @@ class GameLogic {
     const int maxAttempts = 1000; // Prevent infinite loops
 
     for (int i = 0; i < config.shuffleMoves && attempts < maxAttempts; i++) {
-      final neighbors = _getValidNeighbors(currentEmptyIndex, config.gridSize);
+      final neighbors = _getValidNeighbors(currentEmptyIndex, config.columns, config.rows);
       final randomIndex = neighbors[Random().nextInt(neighbors.length)];
       
       // Check if this move would create adjacent same colors
@@ -278,30 +281,30 @@ class GameLogic {
     _swapCells(tempBoard, fromIndex, toIndex);
     
     // Check if the move creates any adjacent same colors
-    return validateBoardDistribution(tempBoard, config.gridSize);
+    return validateBoardDistribution(tempBoard, config.columns, config.rows);
   }
 
   /// Checks if two cells are adjacent
-  static bool isAdjacent(int index1, int index2, int gridSize) {
-    final row1 = index1 ~/ gridSize;
-    final col1 = index1 % gridSize;
-    final row2 = index2 ~/ gridSize;
-    final col2 = index2 % gridSize;
+  static bool isAdjacent(int index1, int index2, int columns, int rows) {
+    final row1 = index1 ~/ columns;
+    final col1 = index1 % columns;
+    final row2 = index2 ~/ columns;
+    final col2 = index2 % columns;
 
     return (row1 == row2 && (col1 - col2).abs() == 1) ||
         (col1 == col2 && (row1 - row2).abs() == 1);
   }
 
   /// Gets valid neighbor indices for a given cell
-  static List<int> _getValidNeighbors(int index, int gridSize) {
+  static List<int> _getValidNeighbors(int index, int columns, int rows) {
     List<int> neighbors = [];
-    final row = index ~/ gridSize;
-    final col = index % gridSize;
+    final row = index ~/ columns;
+    final col = index % columns;
 
-    if (row > 0) neighbors.add(index - gridSize); // Up
-    if (row < gridSize - 1) neighbors.add(index + gridSize); // Down
+    if (row > 0) neighbors.add(index - columns); // Up
+    if (row < rows - 1) neighbors.add(index + columns); // Down
     if (col > 0) neighbors.add(index - 1); // Left
-    if (col < gridSize - 1) neighbors.add(index + 1); // Right
+    if (col < columns - 1) neighbors.add(index + 1); // Right
 
     return neighbors;
   }
@@ -315,7 +318,7 @@ class GameLogic {
 
   /// Checks if the current board state is a winning state
   static bool checkWinCondition(List<String?> boardState, Level config) {
-    final int boardSize = config.gridSize * config.gridSize;
+    final int boardSize = config.columns * config.rows;
     for (int i = 0; i < boardSize; i++) {
       if (boardState[i] == null) continue;
 
@@ -348,14 +351,14 @@ class GameLogic {
 
   /// Validates that no two same-colored balls are adjacent in the board
   /// Returns true if the board is valid (no adjacent same colors), false otherwise
-  static bool validateBoardDistribution(List<String?> boardState, int gridSize) {
+  static bool validateBoardDistribution(List<String?> boardState, int columns, int rows) {
     List<String> violations = [];
     
     for (int i = 0; i < boardState.length; i++) {
       if (boardState[i] == null) continue;
       
-      final int row = i ~/ gridSize;
-      final int col = i % gridSize;
+      final int row = i ~/ columns;
+      final int col = i % columns;
       
       // Check all 8 directions (horizontal, vertical, and diagonal)
       for (int dr = -1; dr <= 1; dr++) {
@@ -366,8 +369,8 @@ class GameLogic {
           final int newCol = col + dc;
           
           // Check bounds
-          if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-            final int neighborIndex = newRow * gridSize + newCol;
+          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+            final int neighborIndex = newRow * columns + newCol;
             
             // Skip empty cells
             if (boardState[neighborIndex] == null) continue;
