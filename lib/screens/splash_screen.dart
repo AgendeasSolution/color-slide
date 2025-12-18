@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   void _navigateToHome() {
     // Minimal delay to show splash screen briefly
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    Future.delayed(const Duration(milliseconds: 2000), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -94,27 +94,37 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         ),
         child: Stack(
           children: [
-            // Main content - Logo centered
-            Center(
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _floatAnimation.value),
-                    child: Opacity(
-                      opacity: _fadeAnimation.value,
-                      child: Transform.scale(
-                        scale: _scaleAnimation.value,
-                        child: Image.asset(
-                          'assets/img/logo.png',
-                          width: ResponsiveHelper.getSpacing(context, 250),
-                        ),
+            // Main content - Logo vertically centered with top space
+            SafeArea(
+              child: Column(
+                children: [
+                  SizedBox(height: ResponsiveHelper.getSpacing(context, 80)),
+                  
+                   Center(
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, _floatAnimation.value),
+                            child: Opacity(
+                              opacity: _fadeAnimation.value,
+                              child: Transform.scale(
+                                scale: _scaleAnimation.value,
+                                child: Image.asset(
+                                  'assets/img/logo.png',
+                                  width: ResponsiveHelper.getSpacing(context, 300),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  );
-                },
+                  
+                ],
               ),
             ),
+           
             
             // Developer credit at bottom - independent positioning
             Positioned(
