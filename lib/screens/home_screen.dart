@@ -464,80 +464,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ? LinearGradient(
                         colors: isCompleted
                               ? [
-                                  AppColors.neonGreen.withOpacity(0.15),
-                                  AppColors.neonGreen.withOpacity(0.08),
-                                  AppColors.neonGreen.withOpacity(0.12),
+                                  Color(0xFF8A2BE2), // Deep purple - matching glowing purple cell
+                                  Color(0xFF6A1B9A), // Darker purple
+                                  Color(0xFF9C27B0), // Vibrant purple
                                 ]
                               : [
-                                  AppColors.bgCard.withOpacity(0.1),
-                                  AppColors.bgCardHover.withOpacity(0.05),
+                                  Color(0xFF1A1A2E), // Dark cosmic blue
+                                  Color(0xFF2A2A3E), // Slightly lighter
                                 ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
                     : LinearGradient(
                         colors: [
-                          AppColors.bgCard.withOpacity(0.3),
-                          AppColors.bgCardHover.withOpacity(0.2),
-                          AppColors.textMuted.withOpacity(0.1),
+                          AppColors.bgCard,
+                          AppColors.bgCardHover,
+                          AppColors.textMuted,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                 border: Border.all(
                   color: isUnlocked
-                        ? AppColors.primary.withOpacity(0.2)
-                        : AppColors.textMuted.withOpacity(0.4),
+                        ? (isCompleted 
+                            ? Color(0xFFBA68C8) // Light purple for completed
+                            : _getDifficultyColor(level.level)) // Orb colors for unlocked
+                        : AppColors.textMuted,
                   width: isUnlocked ? 1 : 1.5,
                 ),
-                boxShadow: isUnlocked
-                    ? [
-                        BoxShadow(
-                            color: AppColors.primary.withOpacity(0.1),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 8),
-                          ),
-                        BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: AppColors.textMuted.withOpacity(0.15),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 4),
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          spreadRadius: 0.5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Stack(
                 children: [
-                    // Animated background pattern
-                    if (isUnlocked)
-                      Positioned.fill(
-                        child: AnimatedBuilder(
-                          animation: _shimmerController,
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: LevelCardPatternPainter(
-                                animation: _shimmerController.value,
-                                color: _getDifficultyColor(level.level),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    
                     // Main content
                   Center(
                     child: Column(
@@ -568,10 +533,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 vertical: ResponsiveHelper.getSpacing(context, 2),
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.neonGreen.withOpacity(0.15),
+                                color: Color(0xFF8A2BE2), // Deep purple - matching glowing purple cell
                                 borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 8)),
                                 border: Border.all(
-                                  color: AppColors.neonGreen.withOpacity(0.3),
+                                  color: Color(0xFFBA68C8), // Lighter purple for border
                                   width: 1,
                                 ),
                               ),
@@ -580,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 style: TextStyle(
                                   fontSize: ResponsiveHelper.getFontSize(context, 7),
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.neonGreen,
+                                  color: Color(0xFFE1BEE7), // Light purple text
                                   letterSpacing: 1.2,
                                   shadows: [
                                     Shadow(
@@ -600,17 +565,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    _getDifficultyColor(level.level).withOpacity(0.2),
-                                    _getDifficultyColor(level.level).withOpacity(0.05),
+                                    _getDifficultyColor(level.level),
+                                    _getDifficultyColor(level.level),
                                   ],
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _getDifficultyColor(level.level).withOpacity(0.2),
-                                    blurRadius: ResponsiveHelper.getSpacing(context, 6),
-                                    spreadRadius: 1,
-                                  ),
-                                ],
                               ),
                               child: Text(
                                 '${level.level}',
@@ -645,68 +603,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 1)),
+                          ] else ...[
+                            // Locked level - show level number and lock icon
+                            // Level number
                             Text(
-                              _getDifficultyText(level.level),
+                              '${level.level}',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 7),
-                                color: _getDifficultyColor(level.level),
+                                fontSize: ResponsiveHelper.getFontSize(context, 20),
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0,
+                                color: AppColors.textMuted,
                                 shadows: [
                                   Shadow(
                                     color: Colors.black.withOpacity(0.8),
-                                    offset: const Offset(1, 1),
-                                    blurRadius: 2,
+                                    offset: const Offset(2, 2),
+                                    blurRadius: 6,
                                   ),
                                 ],
                               ),
                             ),
-                          ] else ...[
-                            // Locked level
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 4)),
+                            // Lock icon
                             Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 6)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    AppColors.secondary.withOpacity(0.25),
-                                    AppColors.bgCard.withOpacity(0.3),
+                                    Color(0xFF4A148C), // Deep purple
+                                    Color(0xFF2A2A3E), // Dark cosmic blue
                                   ],
                                 ),
                                 border: Border.all(
-                                  color: AppColors.secondary.withOpacity(0.6),
+                                  color: Color(0xFF6A1B9A), // Purple border
                                   width: 2,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.secondary.withOpacity(0.3),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
                               ),
                               child: Icon(
                                 Icons.lock,
-                                color: AppColors.secondary,
-                                size: ResponsiveHelper.getIconSize(context, 18),
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
-                            Text(
-                              'LOCKED',
-                              style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 7),
-                                color: AppColors.textMuted,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.8),
-                                    offset: const Offset(1, 1),
-                                    blurRadius: 2,
-                                  ),
-                                ],
+                                color: Color(0xFFBA68C8), // Light purple
+                                size: ResponsiveHelper.getIconSize(context, 20),
                               ),
                             ),
                         ],
@@ -728,15 +663,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                    
-                    // Lock overlay - clear and readable
-                  if (!isUnlocked)
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.black.withOpacity(0.4),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -744,10 +670,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Color _getDifficultyColor(int level) {
-    if (level <= 2) return AppColors.easy;
-    if (level <= 4) return AppColors.medium;
-    if (level <= 6) return AppColors.hard;
-    return AppColors.expert;
+    // Matching orb colors from the background image
+    if (level <= 2) return Color(0xFFFFE66D); // Bright Yellow (like the yellow orb)
+    if (level <= 4) return Color(0xFF00BCD4); // Turquoise/Cyan (like the turquoise orb)
+    if (level <= 6) return Color(0xFF3B82F6); // Deep Blue (like the blue orb)
+    return Color(0xFFFF6B6B); // Vibrant Red (like the red orb)
   }
 
   String _getDifficultyText(int level) {
@@ -819,7 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Icon(
                               Icons.info_outline,
                               size: ResponsiveHelper.getIconSize(context, 16),
-                              color: AppColors.primary,
+                              color: Color(0xFFFF6B35), // Radiant reddish-orange
                             ),
                             SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
                             Text(
@@ -869,19 +796,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppColors.neonPurple.withOpacity(0.8),
-                                      AppColors.neonPurple.withOpacity(0.6),
+                                      Color(0xFFFF6B35), // Radiant reddish-orange glow
+                                      Color(0xFFFF8C42), // Lighter orange
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   border: Border.all(
-                                    color: AppColors.neonPurple.withOpacity(0.5),
+                                    color: Color(0xFFFF8C42), // Orange border
                                     width: ResponsiveHelper.getSpacing(context, 1.5),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.neonPurple.withOpacity(0.3),
+                                      color: Color(0xFFFF6B35), // Radiant reddish-orange
                                       blurRadius: ResponsiveHelper.getSpacing(context, 12),
                                       spreadRadius: ResponsiveHelper.getSpacing(context, 1),
                                       offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
@@ -951,19 +878,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppColors.secondary.withOpacity(0.8),
-                                      AppColors.secondary.withOpacity(0.6),
+                                      Color(0xFF4A148C), // Deep purple from sky
+                                      Color(0xFF6A1B9A), // Slightly lighter purple
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                   border: Border.all(
-                                    color: AppColors.secondary.withOpacity(0.5),
+                                    color: Color(0xFF8A2BE2), // Purple border
                                     width: ResponsiveHelper.getSpacing(context, 1.5),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.secondary.withOpacity(0.3),
+                                      color: Color(0xFF6A1B9A), // Deep purple
                                       blurRadius: ResponsiveHelper.getSpacing(context, 12),
                                       spreadRadius: ResponsiveHelper.getSpacing(context, 1),
                                       offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
@@ -1043,26 +970,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     height: ResponsiveHelper.getButtonHeight(context),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(
-                        ResponsiveHelper.getBorderRadius(context, 8),
+                        ResponsiveHelper.getBorderRadius(context, 12),
                       ),
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.bgCard.withOpacity(0.2),
-                          AppColors.bgCardHover.withOpacity(0.1),
+                          Color(0xFF4A148C), // Deep purple
+                          Color(0xFF6A1B9A), // Lighter purple
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
-                        width: ResponsiveHelper.getSpacing(context, 1.5),
+                        color: Color(0xFFBA68C8), // Light purple border
+                        width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.15),
-                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                          color: Color(0xFF4A148C).withOpacity(0.6),
+                          blurRadius: ResponsiveHelper.getSpacing(context, 8),
                           spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 2)),
                         ),
                       ],
                     ),
@@ -1071,11 +998,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: InkWell(
                         onTap: _showHowToPlay,
                         borderRadius: BorderRadius.circular(
-                          ResponsiveHelper.getBorderRadius(context, 8),
+                          ResponsiveHelper.getBorderRadius(context, 12),
                         ),
                         child: Icon(
                           Icons.help_outline,
-                          color: AppColors.primary,
+                          color: Colors.white,
                           size: ResponsiveHelper.getIconSize(context, 24),
                         ),
                       ),
@@ -1092,35 +1019,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     height: ResponsiveHelper.getButtonHeight(context),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(
-                        ResponsiveHelper.getBorderRadius(context, 8),
+                        ResponsiveHelper.getBorderRadius(context, 12),
                       ),
                       gradient: LinearGradient(
                         colors: _isSoundEnabled
                             ? [
-                                AppColors.bgCard.withOpacity(0.2),
-                                AppColors.bgCardHover.withOpacity(0.1),
+                                Color(0xFFFF6B35), // Radiant reddish-orange
+                                Color(0xFFFF8C42), // Lighter orange
                               ]
                             : [
-                                AppColors.bgCard.withOpacity(0.15),
-                                AppColors.bgCardHover.withOpacity(0.08),
+                                Color(0xFF1A1A2E), // Dark when disabled
+                                Color(0xFF2A2A3E),
                               ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
                         color: _isSoundEnabled
-                            ? AppColors.primary.withOpacity(0.3)
-                            : AppColors.textMuted.withOpacity(0.3),
-                        width: ResponsiveHelper.getSpacing(context, 1.5),
+                            ? Color(0xFFFF8C42) // Orange border
+                            : AppColors.textMuted,
+                        width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: _isSoundEnabled
-                              ? AppColors.primary.withOpacity(0.15)
-                              : Colors.black.withOpacity(0.2),
-                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                              ? Color(0xFFFF6B35).withOpacity(0.6) // Orange glow
+                              : Colors.black,
+                          blurRadius: ResponsiveHelper.getSpacing(context, 8),
                           spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 2)),
                         ),
                       ],
                     ),
@@ -1129,13 +1056,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: InkWell(
                         onTap: _toggleSound,
                         borderRadius: BorderRadius.circular(
-                          ResponsiveHelper.getBorderRadius(context, 8),
+                          ResponsiveHelper.getBorderRadius(context, 12),
                         ),
                         child: Icon(
                           _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
-                          color: _isSoundEnabled
-                              ? AppColors.primary
-                              : AppColors.textMuted,
+                          color: Colors.white,
                           size: ResponsiveHelper.getIconSize(context, 24),
                         ),
                       ),
@@ -1174,7 +1099,7 @@ class LevelCardPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color
       ..style = PaintingStyle.fill;
 
     // Draw animated geometric patterns

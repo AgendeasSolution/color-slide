@@ -94,34 +94,27 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         ),
         child: Stack(
           children: [
-            // Main content - Logo vertically centered with top space
+            // Main content - Logo completely centered
             SafeArea(
-              child: Column(
-                children: [
-                  SizedBox(height: ResponsiveHelper.getSpacing(context, 80)),
-                  
-                   Center(
-                      child: AnimatedBuilder(
-                        animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
-                        builder: (context, child) {
-                          return Transform.translate(
-                            offset: Offset(0, _floatAnimation.value),
-                            child: Opacity(
-                              opacity: _fadeAnimation.value,
-                              child: Transform.scale(
-                                scale: _scaleAnimation.value,
-                                child: Image.asset(
-                                  'assets/img/logo.png',
-                                  width: ResponsiveHelper.getSpacing(context, 300),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _floatAnimation.value),
+                      child: Opacity(
+                        opacity: _fadeAnimation.value,
+                        child: Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: Image.asset(
+                            'assets/img/logo.png',
+                            width: ResponsiveHelper.getSpacing(context, 300),
+                          ),
+                        ),
                       ),
-                    ),
-                  
-                ],
+                    );
+                  },
+                ),
               ),
             ),
            
