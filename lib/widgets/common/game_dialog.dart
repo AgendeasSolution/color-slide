@@ -100,27 +100,20 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.bgCard.withOpacity(0.1),
-                      AppColors.bgCardHover.withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: AppColors.bgCard,
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
-                    width: 1,
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: Colors.black.withOpacity(0.5),
                       blurRadius: 20,
                       spreadRadius: 2,
                       offset: const Offset(0, 8),
                     ),
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withOpacity(0.3),
                       blurRadius: 15,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -129,10 +122,8 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: EdgeInsets.all(dialogPadding),
+                  child: Container(
+                    padding: EdgeInsets.all(dialogPadding),
                       child: SingleChildScrollView(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
@@ -205,10 +196,10 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                                 vertical: ResponsiveHelper.getSpacing(context, 8),
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.bgDarker.withOpacity(0.5),
+                                color: AppColors.bgDarker,
                                 borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 12)),
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.2),
+                                  color: AppColors.primary.withOpacity(0.3),
                                   width: 1,
                                 ),
                               ),
@@ -264,10 +255,10 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                               child: Container(
                                 padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
                                 decoration: BoxDecoration(
-                                  color: AppColors.bgDarker.withOpacity(0.5),
+                                  color: AppColors.bgDarker,
                                   borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 20)),
                                   border: Border.all(
-                                    color: AppColors.textMuted.withOpacity(0.3),
+                                    color: AppColors.textMuted.withOpacity(0.5),
                                     width: 1,
                                   ),
                                 ),
@@ -285,7 +276,6 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                  ),
                 ),
               ),
             );

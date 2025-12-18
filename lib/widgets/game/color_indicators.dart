@@ -31,6 +31,7 @@ class ColorIndicators extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.ballColors[color],
                   borderRadius: BorderRadius.circular(borderRadius),
+                  
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.ballColors[color]!.withOpacity(0.3),

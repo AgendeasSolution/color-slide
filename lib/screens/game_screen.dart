@@ -12,6 +12,7 @@ import '../widgets/common/ad_banner.dart';
 import '../widgets/game/game_header.dart';
 import '../widgets/game/color_indicators.dart';
 import '../widgets/game/game_board.dart';
+import '../widgets/game/elapsed_time_widget.dart';
 import '../widgets/dialogs/how_to_play_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
@@ -158,11 +159,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Timer Management
   //============================================================================
   void _startGameTimer() {
-    // Timer disabled - clock removed from game
-    // Timer logic kept for potential future use but time-up checking is disabled
     _gameTimer?.cancel();
     _timerTick = 0; // Reset tick counter
-    // Timer periodic callback removed - no time-up checking
+    
+    // Update timer every second for elapsed time display
+    _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _gameState.startTime != null && !_gameState.timerPaused) {
+        setState(() {
+          _timerTick++;
+        });
+      }
+    });
   }
 
   void _stopGameTimer() {
@@ -635,7 +642,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             onExit: _exitGame,
                           ),
                         ),
-                        // Timer widget removed - clock removed from game
+                        // Elapsed time display below header
+                        Positioned(
+                          top: ResponsiveHelper.getButtonHeight(context) + ResponsiveHelper.getSpacing(context, 12),
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: ElapsedTimeWidget(
+                              gameState: _gameState,
+                              tick: _timerTick,
+                            ),
+                          ),
+                        ),
                         // Game board centered in the middle of the screen
                         Center(
                           child: Column(

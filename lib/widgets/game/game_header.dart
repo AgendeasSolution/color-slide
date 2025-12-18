@@ -42,15 +42,12 @@ class GameHeader extends StatelessWidget {
         ElevatedButton(
           onPressed: _handleExit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.textSecondary.withOpacity(0.1),
-            foregroundColor: AppColors.textSecondary,
+            backgroundColor: AppColors.ballColors['red']!,
+            foregroundColor: Colors.white,
             padding: EdgeInsets.all(buttonPadding),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
-              side: BorderSide(
-                color: AppColors.textSecondary.withOpacity(0.3),
-                width: 1,
-              ),
+              
             ),
             minimumSize: Size(buttonHeight, buttonHeight),
           ),
@@ -63,10 +60,11 @@ class GameHeader extends StatelessWidget {
             child: Text(
               "Level $currentLevel",
               style: TextStyle(
-                color: AppColors.primary,
-                fontSize: fontSize,
-                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                fontSize: fontSize * 1.3,
+                fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
+               
               ),
             ),
           ),

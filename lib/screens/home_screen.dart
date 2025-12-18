@@ -1047,7 +1047,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       boxShadow: [
                         BoxShadow(
                           color: _isSoundEnabled
-                              ? AppColors.ballColors['yellow']!.withOpacity(0.6)
+                              ? AppColors.ballColors['blue']!.withOpacity(0.6)
                               : Colors.black.withOpacity(0.3),
                           blurRadius: ResponsiveHelper.getSpacing(context, 8),
                           spreadRadius: ResponsiveHelper.getSpacing(context, 1),
