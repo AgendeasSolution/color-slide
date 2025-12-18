@@ -538,19 +538,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         actions: [
           if (!isLastLevel) ...[
             DialogButton(
-              text: "Next Level",
-              onPressed: () {
-                Navigator.of(context).pop();
-                _nextLevel();
-              },
-            ),
-            DialogButton(
               text: "Home",
               onPressed: () {
                 Navigator.of(context).pop();
                 _goToLevelSelector();
               },
             ),
+            DialogButton(
+              text: "Next Level",
+              onPressed: () {
+                Navigator.of(context).pop();
+                _nextLevel();
+              },
+            ),
+          
           ] else ...[
             DialogButton(
               text: "Home",

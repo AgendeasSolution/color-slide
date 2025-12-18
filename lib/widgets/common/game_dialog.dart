@@ -100,7 +100,14 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: AppColors.bgCard,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.bgCard,
+                      AppColors.bgCardHover,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   border: Border.all(
                     color: AppColors.primary.withOpacity(0.3),
                     width: 2,
