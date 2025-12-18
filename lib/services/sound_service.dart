@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-/// Service for managing sound effects and haptic feedback
+/// Optimized service for managing sound effects and haptic feedback
 class SoundService {
   static final SoundService _instance = SoundService._internal();
   factory SoundService() => _instance;
@@ -18,119 +18,68 @@ class SoundService {
   final AudioPlayer _winPlayer = AudioPlayer();
   final AudioPlayer _failPlayer = AudioPlayer();
 
+  // Cache for audio sources to avoid repeated string allocations
+  static const String _buttonTapSound = 'audio/mouse_click_5.mp3';
+  static const String _swipeSound = 'audio/swipe_1.mp3';
+  static const String _winSound = 'audio/win_2.mp3';
+  static const String _failSound = 'audio/fail_3.mp3';
+
   /// Initialize the sound service
   Future<void> init() async {
-    // Set release mode to stop for quick sounds
-    await _buttonTapPlayer.setReleaseMode(ReleaseMode.stop);
-    await _swipePlayer.setReleaseMode(ReleaseMode.stop);
-    await _winPlayer.setReleaseMode(ReleaseMode.stop);
-    await _failPlayer.setReleaseMode(ReleaseMode.stop);
+    // Set release mode to stop for quick sounds - batch operations
+    await Future.wait([
+      _buttonTapPlayer.setReleaseMode(ReleaseMode.stop),
+      _swipePlayer.setReleaseMode(ReleaseMode.stop),
+      _winPlayer.setReleaseMode(ReleaseMode.stop),
+      _failPlayer.setReleaseMode(ReleaseMode.stop),
+    ]);
+  }
+
+  /// Reusable method to play sound with error handling
+  Future<void> _playSound(AudioPlayer player, String source) async {
+    if (!_isSoundEnabled) return;
+    
+    try {
+      await player.stop();
+      await player.play(AssetSource(source), volume: 1.0, mode: PlayerMode.lowLatency);
+    } catch (e) {
+      // If stop fails or player is already stopped, just play
+      try {
+        await player.play(AssetSource(source), volume: 1.0, mode: PlayerMode.lowLatency);
+      } catch (_) {
+        // Ignore errors silently
+      }
+    }
   }
 
   /// Play button tap sound (mouse_click_5.mp3)
   Future<void> playButtonTap() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      // Stop current playback and reset to beginning for reliable replay
-      await _buttonTapPlayer.stop();
-      await _buttonTapPlayer.play(AssetSource('audio/mouse_click_5.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      // If stop fails or player is already stopped, just play
-      try {
-        await _buttonTapPlayer.play(AssetSource('audio/mouse_click_5.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_buttonTapPlayer, _buttonTapSound);
   }
 
   /// Play swipe sound (swipe_1.mp3) - for color ball taps
   Future<void> playSwipe() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      // Stop current playback and reset to beginning for reliable replay
-      await _swipePlayer.stop();
-      await _swipePlayer.play(AssetSource('audio/swipe_1.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      // If stop fails or player is already stopped, just play
-      try {
-        await _swipePlayer.play(AssetSource('audio/swipe_1.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_swipePlayer, _swipeSound);
   }
 
   /// Play win sound (win_2.mp3) - for puzzle solved
   Future<void> playWin() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      // Stop current playback and reset to beginning for reliable replay
-      await _winPlayer.stop();
-      await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      // If stop fails or player is already stopped, just play
-      try {
-        await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_winPlayer, _winSound);
   }
 
   /// Play fail sound (fail_3.mp3) - for game over, time's up, or losing
   Future<void> playFail() async {
-    if (!_isSoundEnabled) {
-      return;
-    }
-    
-    try {
-      // Stop current playback and reset to beginning for reliable replay
-      await _failPlayer.stop();
-      await _failPlayer.play(AssetSource('audio/fail_3.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      // If stop fails or player is already stopped, just play
-      try {
-        await _failPlayer.play(AssetSource('audio/fail_3.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (error) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_failPlayer, _failSound);
   }
 
   /// Play level selection sound
   Future<void> playLevelSelect() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      await _buttonTapPlayer.stop();
-      await _buttonTapPlayer.play(AssetSource('audio/mouse_click_5.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      try {
-        await _buttonTapPlayer.play(AssetSource('audio/mouse_click_5.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_buttonTapPlayer, _buttonTapSound);
   }
 
   /// Play level completion sound
   Future<void> playLevelComplete() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      await _winPlayer.stop();
-      await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      try {
-        await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_winPlayer, _winSound);
   }
 
   /// Play error sound
@@ -139,25 +88,14 @@ class SoundService {
     
     try {
       await SystemSound.play(SystemSoundType.alert);
-    } catch (e) {
+    } catch (_) {
       // Silently handle errors
     }
   }
 
   /// Play success sound
   Future<void> playSuccess() async {
-    if (!_isSoundEnabled) return;
-    
-    try {
-      await _winPlayer.stop();
-      await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-    } catch (e) {
-      try {
-        await _winPlayer.play(AssetSource('audio/win_2.mp3'), volume: 1.0, mode: PlayerMode.lowLatency);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
+    await _playSound(_winPlayer, _winSound);
   }
 
   /// Play background music
@@ -219,11 +157,15 @@ class SoundService {
   void toggleSound() {
     _isSoundEnabled = !_isSoundEnabled;
     if (!_isSoundEnabled) {
-      // Stop any playing sounds
-      _buttonTapPlayer.stop();
-      _swipePlayer.stop();
-      _winPlayer.stop();
-      _failPlayer.stop();
+      // Stop any playing sounds - batch operations
+      Future.wait([
+        _buttonTapPlayer.stop(),
+        _swipePlayer.stop(),
+        _winPlayer.stop(),
+        _failPlayer.stop(),
+      ]).catchError((_) {
+        // Ignore errors when stopping
+      });
     }
   }
 

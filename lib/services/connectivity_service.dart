@@ -1,11 +1,13 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:io';
 
-/// Service for checking internet connectivity status
+/// Optimized service for checking internet connectivity status
 class ConnectivityService {
   static final ConnectivityService _instance = ConnectivityService._internal();
   factory ConnectivityService() => _instance;
   ConnectivityService._internal();
+  
+  static ConnectivityService get instance => _instance;
 
   final Connectivity _connectivity = Connectivity();
 

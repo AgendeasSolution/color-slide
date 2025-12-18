@@ -4,7 +4,7 @@ import '../components/common/animated_background.dart';
 import '../components/common/banner_ad_widget.dart';
 import '../constants/app_constants.dart';
 import '../models/fgtp_app_model.dart';
-import '../services/audio_service.dart';
+import '../services/sound_service.dart';
 import '../services/fgtp_games_service.dart' show FgtpGamesService, NoInternetException;
 import '../services/connectivity_service.dart';
 import '../constants/app_colors.dart';
@@ -22,7 +22,7 @@ class OtherGamesScreen extends StatefulWidget {
 class _OtherGamesScreenState extends State<OtherGamesScreen>
     with TickerProviderStateMixin {
   late final AnimationController _bgController;
-  late final AudioService _audioService;
+  // Removed AudioService wrapper - using SoundService directly
   late final FgtpGamesService _gamesService;
   final ConnectivityService _connectivityService = ConnectivityService();
   List<FgtpApp> _games = const [];
@@ -39,7 +39,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
       duration:
           Duration(seconds: AppConstants.backgroundAnimationDuration),
     )..repeat();
-    _audioService = AudioService.instance;
+    // SoundService is accessed directly via singleton
     _gamesService = FgtpGamesService();
     _loadGames();
   }
@@ -119,7 +119,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     }
   }
   Future<void> _openStore(FgtpApp app) async {
-    _audioService.playMouseClickSound();
+    SoundService.instance.playButtonTap();
     
     // Check internet connectivity before attempting to open store URL
     final hasInternet = await _connectivityService.hasInternetConnection();
@@ -155,6 +155,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
                   ),
                 );
               }
+              return false;
             });
             return;
           }
@@ -244,7 +245,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
             children: [
           ElevatedButton(
             onPressed: () {
-              AudioService.instance.playMouseClickSound();
+              SoundService.instance.playButtonTap();
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(

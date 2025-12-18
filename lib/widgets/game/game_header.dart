@@ -29,9 +29,9 @@ class GameHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonHeight = ResponsiveHelper.getButtonHeight(context);
-    final iconSize = ResponsiveHelper.getIconSize(context, 18);
-    final fontSize = ResponsiveHelper.getFontSize(context, 20);
+    final buttonHeight = ResponsiveHelper.getButtonHeight(context) * 0.8; // 20% smaller
+    final iconSize = ResponsiveHelper.getIconSize(context, 14.4); // 18 * 0.8 = 14.4 (20% smaller)
+    final fontSize = ResponsiveHelper.getFontSize(context, 16); // 20 * 0.8 = 16 (20% smaller)
     final buttonPadding = ResponsiveHelper.getSpacing(context, 8);
     final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
     
@@ -42,7 +42,7 @@ class GameHeader extends StatelessWidget {
         ElevatedButton(
           onPressed: _handleExit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.ballColors['red']!,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             padding: EdgeInsets.all(buttonPadding),
             shape: RoundedRectangleBorder(
@@ -61,7 +61,7 @@ class GameHeader extends StatelessWidget {
               "Level $currentLevel",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: fontSize * 1.3,
+                fontSize: fontSize * 1.3, // 16 * 1.3 = 20.8 (smaller than before)
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.5,
                
@@ -75,7 +75,7 @@ class GameHeader extends StatelessWidget {
           onPressed: _handleReset,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.bgDark,
+            foregroundColor: Colors.white, // Changed to white to match back button
             padding: EdgeInsets.all(buttonPadding),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),

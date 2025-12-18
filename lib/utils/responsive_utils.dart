@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import '../utils/responsive_helper.dart';
-import '../constants/app_colors.dart';
+import 'responsive_helper.dart';
 
-/// Responsive utilities wrapper for consistent API
+/// Responsive utilities - exports ResponsiveHelper methods for backward compatibility
+/// 
+/// This class is deprecated. Use ResponsiveHelper directly for better performance.
+/// Kept for backward compatibility with existing code.
+@Deprecated('Use ResponsiveHelper directly instead')
 class ResponsiveUtils {
+  ResponsiveUtils._(); // Private constructor
+
   /// Get responsive spacing
   static double getResponsiveSpacing(BuildContext context, double baseSpacing) {
-    return ResponsiveHelper.getSpacing(context, baseSpacing);
+    return ResponsiveHelper.getResponsiveSpacing(context, baseSpacing);
   }
 
   /// Get responsive text style
@@ -18,11 +23,11 @@ class ResponsiveUtils {
     double? letterSpacing,
     double? height,
   }) {
-    final fontSize = ResponsiveHelper.getFontSize(context, baseFontSize);
-    return TextStyle(
-      fontSize: fontSize,
+    return ResponsiveHelper.getResponsiveTextStyle(
+      context,
+      baseFontSize: baseFontSize,
       fontWeight: fontWeight,
-      color: color ?? AppColors.textPrimary,
+      color: color,
       letterSpacing: letterSpacing,
       height: height,
     );
@@ -30,7 +35,7 @@ class ResponsiveUtils {
 
   /// Get responsive border radius
   static double getResponsiveBorderRadius(BuildContext context, double baseRadius) {
-    return ResponsiveHelper.getBorderRadius(context, baseRadius);
+    return ResponsiveHelper.getResponsiveBorderRadius(context, baseRadius);
   }
 
   /// Get responsive box shadow
@@ -41,16 +46,13 @@ class ResponsiveUtils {
     required double baseSpreadRadius,
     required Offset baseOffset,
   }) {
-    final blurRadius = ResponsiveHelper.getSpacing(context, baseBlurRadius);
-    final spreadRadius = ResponsiveHelper.getSpacing(context, baseSpreadRadius);
-    return [
-      BoxShadow(
-        color: color,
-        blurRadius: blurRadius,
-        spreadRadius: spreadRadius,
-        offset: baseOffset,
-      ),
-    ];
+    return ResponsiveHelper.getResponsiveBoxShadow(
+      context,
+      color: color,
+      baseBlurRadius: baseBlurRadius,
+      baseSpreadRadius: baseSpreadRadius,
+      baseOffset: baseOffset,
+    );
   }
 }
 

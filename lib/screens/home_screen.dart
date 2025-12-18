@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
-import '../constants/game_constants.dart';
 import '../utils/responsive_helper.dart';
 import '../widgets/common/game_dialog.dart';
 import '../widgets/common/dialog_button.dart';
@@ -29,13 +26,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _shimmerController;
-  late AnimationController _pulseController;
-  late AnimationController _floatController;
-  late AnimationController _glowController;
-  
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _floatAnimation;
-  late Animation<double> _glowAnimation;
   
   // Level selector state
   List<bool> _levelUnlocked = [];
@@ -51,6 +41,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Update state
   bool _showUpdatePopup = false;
   final UpdateService _updateService = UpdateService();
+  
+  // Carousel state
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
   @override
   void initState() {
@@ -128,9 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _shimmerController.dispose();
-    _pulseController.dispose();
-    _floatController.dispose();
-    _glowController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -139,33 +131,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-    
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _floatController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _glowController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    
-    _floatAnimation = Tween<double>(begin: -10.0, end: 10.0).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-    
-    _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
   }
 
   Future<void> _loadProgress() async {
@@ -338,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             );
           }
+          return false;
         });
       } else {
         if (mounted) {
@@ -418,61 +384,140 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    final crossAxisCount = ResponsiveHelper.getLevelGridCrossAxisCount(context);
+    // Split levels into chunks of 9 (3x3 grid)
+    const int levelsPerPage = 9; // 3 rows × 3 columns
+    final totalLevels = GameLevels.levels.length;
+    final totalPages = (totalLevels / levelsPerPage).ceil();
+    
+    return Column(
+      children: [
+        // Carousel with level grids
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemCount: totalPages,
+            itemBuilder: (context, pageIndex) {
+              final startIndex = pageIndex * levelsPerPage;
+              final endIndex = math.min(startIndex + levelsPerPage, totalLevels);
+              final pageLevels = GameLevels.levels.sublist(startIndex, endIndex);
+              
+              return _buildLevelGridPage(context, pageLevels, startIndex);
+            },
+          ),
+        ),
+        // Page indicators
+        if (totalPages > 1)
+          _buildPageIndicators(context, totalPages),
+      ],
+    );
+  }
+  
+  Widget _buildLevelGridPage(BuildContext context, List<Level> pageLevels, int startIndex) {
     final gridSpacing = ResponsiveHelper.getSpacing(context, 8);
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.zero,
+    const crossAxisCount = 3; // Fixed 3 columns
+    
+    return Padding(
+      padding: EdgeInsets.only(
+        left: ResponsiveHelper.getSpacing(context, 8),
+        right: ResponsiveHelper.getSpacing(context, 8),
+       
+      ),
       child: GridView.builder(
-        shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: gridSpacing,
           mainAxisSpacing: gridSpacing,
           childAspectRatio: 1.0,
         ),
-        itemCount: GameLevels.levels.length,
+        itemCount: pageLevels.length,
         itemBuilder: (context, index) {
+          final globalIndex = startIndex + index;
+          
           // Safety check: ensure index is valid
-          if (index < 0 || index >= GameLevels.levels.length) {
+          if (globalIndex < 0 || globalIndex >= GameLevels.levels.length) {
             return const SizedBox.shrink();
           }
           
-          final level = GameLevels.levels[index];
+          final level = pageLevels[index];
           
           // Safety check: ensure arrays are properly sized
-          final isUnlocked = (index < _levelUnlocked.length) ? _levelUnlocked[index] : false;
-          final isCompleted = (index < _levelCompleted.length) ? _levelCompleted[index] : false;
+          final isUnlocked = (globalIndex < _levelUnlocked.length) ? _levelUnlocked[globalIndex] : false;
+          final isCompleted = (globalIndex < _levelCompleted.length) ? _levelCompleted[globalIndex] : false;
           
           return _buildLevelCard(context, level, isUnlocked, isCompleted);
         },
       ),
     );
   }
+  
+  Widget _buildPageIndicators(BuildContext context, int totalPages) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: ResponsiveHelper.getSpacing(context, 68),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(
+          totalPages,
+          (index) => GestureDetector(
+            onTap: () {
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: Container(
+              width: ResponsiveHelper.getSpacing(context, 8),
+              height: ResponsiveHelper.getSpacing(context, 8),
+              margin: EdgeInsets.symmetric(
+                horizontal: ResponsiveHelper.getSpacing(context, 4),
+              ),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _currentPage == index
+                    ? AppColors.ballColors['blue'] ?? AppColors.primary
+                    : AppColors.textMuted.withOpacity(0.3),
+                boxShadow: _currentPage == index
+                    ? [
+                        BoxShadow(
+                          color: (AppColors.ballColors['blue'] ?? AppColors.primary).withOpacity(0.5),
+                          blurRadius: ResponsiveHelper.getSpacing(context, 4),
+                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildLevelCard(BuildContext context, Level level, bool isUnlocked, bool isCompleted) {
     // Get colors from game board ballColors
-    Color? cardColor;
     Color? borderColor;
     Color? shadowColor;
     
     if (isCompleted) {
       // Completed level - use yellow/orange gradient
-      cardColor = AppColors.ballColors['yellow'];
-      borderColor = AppColors.ballColors['yellow']!;
-      shadowColor = AppColors.ballColors['yellow']!.withOpacity(0.5);
+      borderColor = AppColors.ballColors['yellow'];
+      shadowColor = AppColors.ballColors['yellow']?.withOpacity(0.5);
     } else if (isUnlocked) {
       // Unlocked level - use blue/indigo gradient (same as lock icon background) - no opacity
-      cardColor = AppColors.ballColors['blue'];
-      borderColor = AppColors.ballColors['blue']!;
-      shadowColor = AppColors.ballColors['blue']!.withOpacity(0.5);
+      borderColor = AppColors.ballColors['blue'];
+      shadowColor = AppColors.ballColors['blue']?.withOpacity(0.5);
     } else {
       // Locked level - use same color as solved level (green/teal)
-      cardColor = null;
-      borderColor = AppColors.ballColors['green']!;
-      shadowColor = AppColors.ballColors['green']!.withOpacity(0.5);
+      borderColor = AppColors.ballColors['green'];
+      shadowColor = AppColors.ballColors['green']?.withOpacity(0.5);
     }
     
     return GestureDetector(
@@ -505,12 +550,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         end: Alignment.bottomRight,
                       ),
                 border: Border.all(
-                  color: borderColor!,
-                  width: isUnlocked ? 1.5 : 1.5,
+                  color: borderColor ?? AppColors.border,
+                  width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: shadowColor!,
+                    color: shadowColor ?? AppColors.border.withOpacity(0.5),
                     blurRadius: isUnlocked ? 12 : 8,
                     spreadRadius: isUnlocked ? 1 : 0,
                     offset: const Offset(0, 2),
@@ -677,17 +722,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return AppColors.ballColors['red']!;
   }
 
-  String _getDifficultyText(int level) {
-    if (level <= 2) return 'EASY';
-    if (level <= 4) return 'MEDIUM';
-    if (level <= 6) return 'HARD';
-    return 'EXPERT';
-  }
 
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
-    final verticalPadding = ResponsiveHelper.getVerticalPadding(context);
     
     return Scaffold(
       body: Stack(
@@ -718,7 +756,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: EdgeInsets.zero,
                       child: Image.asset(
                         'assets/img/logo.png',
-                        width: ResponsiveHelper.getSpacing(context, 250),
+                        width: ResponsiveHelper.getSpacing(context, 200),
                       ),
                     ),
                     SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
@@ -788,9 +826,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Container(
                                 constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 150),
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 120),
                                 ),
-                                height: ResponsiveHelper.getButtonHeight(context),
+                                height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
                                     ResponsiveHelper.getBorderRadius(context, 24),
@@ -824,7 +862,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ResponsiveHelper.getBorderRadius(context, 24),
                                     ),
                                     child: Container(
-                                      height: ResponsiveHelper.getButtonHeight(context),
+                                      height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                                       padding: EdgeInsets.symmetric(
                                         horizontal: ResponsiveHelper.getSpacing(context, 10),
                                       ),
@@ -835,7 +873,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         children: [
                                           Icon(
                                             Icons.smartphone,
-                                            size: ResponsiveHelper.getIconSize(context, 20),
+                                            size: ResponsiveHelper.getIconSize(context, 16),
                                             color: Colors.white,
                                           ),
                                           SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
@@ -843,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             child: Text(
                                               'Mobile Games',
                                               style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 16),
+                                                fontSize: ResponsiveHelper.getFontSize(context, 12.8),
                                                 fontWeight: FontWeight.w900,
                                                 color: Colors.white,
                                                 letterSpacing: 1.0,
@@ -872,9 +910,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Container(
                                 constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 150),
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 120),
                                 ),
-                                height: ResponsiveHelper.getButtonHeight(context),
+                                height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
                                     ResponsiveHelper.getBorderRadius(context, 24),
@@ -908,7 +946,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ResponsiveHelper.getBorderRadius(context, 24),
                                     ),
                                     child: Container(
-                                      height: ResponsiveHelper.getButtonHeight(context),
+                                      height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                                       padding: EdgeInsets.symmetric(
                                         horizontal: ResponsiveHelper.getSpacing(context, 10),
                                       ),
@@ -919,7 +957,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         children: [
                                           Icon(
                                             Icons.laptop,
-                                            size: ResponsiveHelper.getIconSize(context, 20),
+                                            size: ResponsiveHelper.getIconSize(context, 16),
                                             color: Colors.white,
                                           ),
                                           SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
@@ -927,7 +965,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             child: Text(
                                               'Web Games',
                                               style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 16),
+                                                fontSize: ResponsiveHelper.getFontSize(context, 12.8),
                                                 fontWeight: FontWeight.w900,
                                                 color: Colors.white,
                                                 letterSpacing: 1.0,
@@ -970,8 +1008,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   top: ResponsiveHelper.getSpacing(context, 2),
                   left: horizontalPadding,
                   child: Container(
-                    width: ResponsiveHelper.getButtonHeight(context),
-                    height: ResponsiveHelper.getButtonHeight(context),
+                    width: ResponsiveHelper.getButtonHeight(context) * 0.8,
+                    height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(
                         ResponsiveHelper.getBorderRadius(context, 12),
@@ -1007,7 +1045,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Icon(
                           Icons.help_outline,
                           color: Colors.white,
-                          size: ResponsiveHelper.getIconSize(context, 24),
+                          size: ResponsiveHelper.getIconSize(context, 19.2),
                         ),
                       ),
                     ),
@@ -1019,8 +1057,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   top: ResponsiveHelper.getSpacing(context, 2),
                   right: horizontalPadding,
                   child: Container(
-                    width: ResponsiveHelper.getButtonHeight(context),
-                    height: ResponsiveHelper.getButtonHeight(context),
+                    width: ResponsiveHelper.getButtonHeight(context) * 0.8,
+                    height: ResponsiveHelper.getButtonHeight(context) * 0.8,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(
                         ResponsiveHelper.getBorderRadius(context, 12),
@@ -1028,8 +1066,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       gradient: LinearGradient(
                         colors: _isSoundEnabled
                             ? [
-                                AppColors.ballColors['yellow']!,
-                                AppColors.ballColors['orange']!,
+                                AppColors.primary,
+                                AppColors.primaryHover,
                               ]
                             : [
                                 AppColors.bgCard,
@@ -1040,14 +1078,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                       border: Border.all(
                         color: _isSoundEnabled
-                            ? AppColors.ballColors['yellow']!.withOpacity(0.8)
+                            ? AppColors.primary.withOpacity(0.8)
                             : AppColors.textMuted,
                         width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: _isSoundEnabled
-                              ? AppColors.ballColors['blue']!.withOpacity(0.6)
+                              ? AppColors.primary.withOpacity(0.6)
                               : Colors.black.withOpacity(0.3),
                           blurRadius: ResponsiveHelper.getSpacing(context, 8),
                           spreadRadius: ResponsiveHelper.getSpacing(context, 1),
@@ -1065,7 +1103,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Icon(
                           _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
                           color: Colors.white,
-                          size: ResponsiveHelper.getIconSize(context, 24),
+                          size: ResponsiveHelper.getIconSize(context, 19.2),
                         ),
                       ),
                     ),

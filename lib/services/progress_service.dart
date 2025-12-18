@@ -6,10 +6,12 @@ class ProgressService {
   static const String _completedLevelsKey = 'completed_levels';
   static const String _currentLevelKey = 'current_level';
   
-  static ProgressService? _instance;
-  static ProgressService get instance => _instance ??= ProgressService._();
+  static final ProgressService _instance = ProgressService._();
+  factory ProgressService() => _instance;
   
   ProgressService._();
+  
+  static ProgressService get instance => _instance;
   
   SharedPreferences? _prefs;
   

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../constants/app_colors.dart';
 import '../constants/game_constants.dart';
 import '../models/level.dart';
 import '../models/game_state.dart';
@@ -13,7 +12,6 @@ import '../widgets/game/game_header.dart';
 import '../widgets/game/color_indicators.dart';
 import '../widgets/game/game_board.dart';
 import '../widgets/game/elapsed_time_widget.dart';
-import '../widgets/dialogs/how_to_play_content.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
 import '../services/interstitial_ad_service.dart';
@@ -501,27 +499,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   //============================================================================
   // Modals / Dialogs
   //============================================================================
-  Future<void> _showStartModal() {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => GameDialog(
-        title: "Color Slide",
-        subtitle: "Welcome to the ultimate color puzzle challenge!",
-        content: const HowToPlayContent(),
-        actions: [
-          DialogButton(
-            text: "Start Game",
-            onPressed: () {
-              Navigator.of(context).pop();
-              _startNewGame();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showGameOverDialog() {
     final bool isLastLevel = _gameState.currentLevel >= GameLevels.levels.length;
     
@@ -624,43 +601,42 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             child: Column(
               children: [
                 Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: horizontalPadding,
-                      right: horizontalPadding,
-                      bottom: verticalPadding,
-                    ),
-                    child: Stack(
-                      children: [
-                        // Header at the top
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: GameHeader(
-                            currentLevel: _gameState.currentLevel,
-                            onReset: _resetToInitialPosition,
-                            onExit: _exitGame,
+                  child: Stack(
+                    children: [
+                      // Header at the top with reduced horizontal padding
+                      Positioned(
+                        top: 0,
+                        left: horizontalPadding * 0.5, // 50% of normal padding
+                        right: horizontalPadding * 0.5, // 50% of normal padding
+                        child: GameHeader(
+                          currentLevel: _gameState.currentLevel,
+                          onReset: _resetToInitialPosition,
+                          onExit: _exitGame,
+                        ),
+                      ),
+                      // Elapsed time display below header
+                      Positioned(
+                        top: ResponsiveHelper.getButtonHeight(context) * 0.8 + ResponsiveHelper.getSpacing(context, 12),
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: ElapsedTimeWidget(
+                            gameState: _gameState,
+                            tick: _timerTick,
                           ),
                         ),
-                        // Elapsed time display below header
-                        Positioned(
-                          top: ResponsiveHelper.getButtonHeight(context) + ResponsiveHelper.getSpacing(context, 12),
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: ElapsedTimeWidget(
-                              gameState: _gameState,
-                              tick: _timerTick,
-                            ),
+                      ),
+                      // Game board centered independently in the middle of the screen
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: verticalPadding,
                           ),
-                        ),
-                        // Game board centered in the middle of the screen
-                        Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               if (_gameState.boardState.isNotEmpty) ...[
+                                SizedBox(height: ResponsiveHelper.getSpacing(context, 20)), // Top margin for game board
                                 ConstrainedBox(
                                   constraints: BoxConstraints(maxWidth: maxBoardWidth),
                                   child: ColorIndicators(config: _gameState.currentConfig),
@@ -680,8 +656,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 // Ad Banner at the bottom with proper spacing

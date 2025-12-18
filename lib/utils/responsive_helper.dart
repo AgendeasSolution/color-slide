@@ -1,187 +1,266 @@
 import 'package:flutter/material.dart';
 import '../constants/game_constants.dart';
+import '../constants/app_colors.dart';
 
-/// Responsive helper utility for handling various screen sizes
+/// Optimized responsive utility for handling various screen sizes
+/// Consolidates all responsive helper methods in one place
 class ResponsiveHelper {
+  ResponsiveHelper._(); // Private constructor to prevent instantiation
+
+  // Cache MediaQuery to avoid repeated lookups
+  static MediaQueryData _getMediaQuery(BuildContext context) {
+    return MediaQuery.of(context);
+  }
+
   /// Get screen width
   static double screenWidth(BuildContext context) {
-    return MediaQuery.of(context).size.width;
+    return _getMediaQuery(context).size.width;
   }
 
   /// Get screen height
   static double screenHeight(BuildContext context) {
-    return MediaQuery.of(context).size.height;
+    return _getMediaQuery(context).size.height;
+  }
+
+  /// Get device type enum for better performance
+  static _DeviceType _getDeviceType(BuildContext context) {
+    final width = screenWidth(context);
+    if (width >= GameConstants.largeTabletBreakpoint) {
+      return _DeviceType.largeTablet;
+    } else if (width >= GameConstants.tabletBreakpoint) {
+      return _DeviceType.tablet;
+    }
+    return _DeviceType.phone;
   }
 
   /// Check if device is phone (small screen)
   static bool isPhone(BuildContext context) {
-    return screenWidth(context) < GameConstants.tabletBreakpoint;
+    return _getDeviceType(context) == _DeviceType.phone;
   }
 
   /// Check if device is tablet
   static bool isTablet(BuildContext context) {
-    return screenWidth(context) >= GameConstants.tabletBreakpoint;
+    final type = _getDeviceType(context);
+    return type == _DeviceType.tablet || type == _DeviceType.largeTablet;
   }
 
   /// Check if device is large tablet
   static bool isLargeTablet(BuildContext context) {
-    return screenWidth(context) >= GameConstants.largeTabletBreakpoint;
+    return _getDeviceType(context) == _DeviceType.largeTablet;
+  }
+
+  /// Get responsive scale factor based on device type
+  static double _getScaleFactor(BuildContext context, {
+    required double mobile,
+    required double tablet,
+    required double largeTablet,
+  }) {
+    switch (_getDeviceType(context)) {
+      case _DeviceType.largeTablet:
+        return largeTablet;
+      case _DeviceType.tablet:
+        return tablet;
+      case _DeviceType.phone:
+        return mobile;
+    }
   }
 
   /// Get responsive padding based on screen size
   static double getHorizontalPadding(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.horizontalPaddingLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.horizontalPaddingTablet;
-    } else {
-      return GameConstants.horizontalPaddingMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.horizontalPaddingMobile,
+      tablet: GameConstants.horizontalPaddingTablet,
+      largeTablet: GameConstants.horizontalPaddingLargeTablet,
+    );
   }
 
   /// Get responsive vertical padding
   static double getVerticalPadding(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.verticalPaddingLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.verticalPaddingTablet;
-    } else {
-      return GameConstants.verticalPaddingMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.verticalPaddingMobile,
+      tablet: GameConstants.verticalPaddingTablet,
+      largeTablet: GameConstants.verticalPaddingLargeTablet,
+    );
   }
 
   /// Get responsive font size with scale factor
   static double getFontSize(BuildContext context, double baseFontSize) {
-    if (isLargeTablet(context)) {
-      return baseFontSize * GameConstants.fontScaleLargeTablet;
-    } else if (isTablet(context)) {
-      return baseFontSize * GameConstants.fontScaleTablet;
-    } else {
-      return baseFontSize * GameConstants.fontScaleMobile;
-    }
+    return baseFontSize * _getScaleFactor(
+      context,
+      mobile: GameConstants.fontScaleMobile,
+      tablet: GameConstants.fontScaleTablet,
+      largeTablet: GameConstants.fontScaleLargeTablet,
+    );
   }
 
   /// Get responsive icon size
   static double getIconSize(BuildContext context, double baseIconSize) {
-    if (isLargeTablet(context)) {
-      return baseIconSize * GameConstants.iconScaleLargeTablet;
-    } else if (isTablet(context)) {
-      return baseIconSize * GameConstants.iconScaleTablet;
-    } else {
-      return baseIconSize * GameConstants.iconScaleMobile;
-    }
+    return baseIconSize * _getScaleFactor(
+      context,
+      mobile: GameConstants.iconScaleMobile,
+      tablet: GameConstants.iconScaleTablet,
+      largeTablet: GameConstants.iconScaleLargeTablet,
+    );
   }
 
   /// Get responsive spacing
   static double getSpacing(BuildContext context, double baseSpacing) {
-    if (isLargeTablet(context)) {
-      return baseSpacing * GameConstants.spacingScaleLargeTablet;
-    } else if (isTablet(context)) {
-      return baseSpacing * GameConstants.spacingScaleTablet;
-    } else {
-      return baseSpacing * GameConstants.spacingScaleMobile;
-    }
+    return baseSpacing * _getScaleFactor(
+      context,
+      mobile: GameConstants.spacingScaleMobile,
+      tablet: GameConstants.spacingScaleTablet,
+      largeTablet: GameConstants.spacingScaleLargeTablet,
+    );
+  }
+
+  /// Get responsive spacing (alias for consistency with ResponsiveUtils)
+  static double getResponsiveSpacing(BuildContext context, double baseSpacing) {
+    return getSpacing(context, baseSpacing);
   }
 
   /// Get responsive board width
   static double getMaxBoardWidth(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.maxBoardWidthLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.maxBoardWidthTablet;
-    } else {
-      return GameConstants.maxBoardWidthMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.maxBoardWidthMobile,
+      tablet: GameConstants.maxBoardWidthTablet,
+      largeTablet: GameConstants.maxBoardWidthLargeTablet,
+    );
   }
 
   /// Get responsive grid spacing
   static double getGridSpacing(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.gridSpacingLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.gridSpacingTablet;
-    } else {
-      return GameConstants.gridSpacingMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.gridSpacingMobile,
+      tablet: GameConstants.gridSpacingTablet,
+      largeTablet: GameConstants.gridSpacingLargeTablet,
+    );
   }
 
   /// Get responsive border radius
   static double getBorderRadius(BuildContext context, double baseRadius) {
-    if (isLargeTablet(context)) {
-      return baseRadius * GameConstants.borderRadiusScaleLargeTablet;
-    } else if (isTablet(context)) {
-      return baseRadius * GameConstants.borderRadiusScaleTablet;
-    } else {
-      return baseRadius * GameConstants.borderRadiusScaleMobile;
-    }
+    return baseRadius * _getScaleFactor(
+      context,
+      mobile: GameConstants.borderRadiusScaleMobile,
+      tablet: GameConstants.borderRadiusScaleTablet,
+      largeTablet: GameConstants.borderRadiusScaleLargeTablet,
+    );
+  }
+
+  /// Get responsive border radius (alias for consistency with ResponsiveUtils)
+  static double getResponsiveBorderRadius(BuildContext context, double baseRadius) {
+    return getBorderRadius(context, baseRadius);
   }
 
   /// Get responsive button height
   static double getButtonHeight(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.buttonHeightLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.buttonHeightTablet;
-    } else {
-      return GameConstants.buttonHeightMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.buttonHeightMobile,
+      tablet: GameConstants.buttonHeightTablet,
+      largeTablet: GameConstants.buttonHeightLargeTablet,
+    );
   }
 
   /// Get responsive dialog max width
   static double getDialogMaxWidth(BuildContext context) {
-    final screenWidth = ResponsiveHelper.screenWidth(context);
-    if (isLargeTablet(context)) {
+    final type = _getDeviceType(context);
+    if (type == _DeviceType.largeTablet) {
       return GameConstants.maxDialogWidthLargeTablet;
-    } else if (isTablet(context)) {
+    } else if (type == _DeviceType.tablet) {
       return GameConstants.maxDialogWidthTablet;
     } else {
       // For mobile, use 90% of screen width with padding
-      return screenWidth * 0.9;
+      return screenWidth(context) * 0.9;
     }
   }
 
   /// Get responsive level grid cross axis count
   static int getLevelGridCrossAxisCount(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.levelGridCrossAxisCountLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.levelGridCrossAxisCountTablet;
-    } else {
-      return GameConstants.levelGridCrossAxisCountMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.levelGridCrossAxisCountMobile.toDouble(),
+      tablet: GameConstants.levelGridCrossAxisCountTablet.toDouble(),
+      largeTablet: GameConstants.levelGridCrossAxisCountLargeTablet.toDouble(),
+    ).toInt();
   }
 
   /// Get responsive timer widget size
   static double getTimerIconSize(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.timerIconSizeLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.timerIconSizeTablet;
-    } else {
-      return GameConstants.timerIconSizeMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.timerIconSizeMobile,
+      tablet: GameConstants.timerIconSizeTablet,
+      largeTablet: GameConstants.timerIconSizeLargeTablet,
+    );
   }
 
   /// Get responsive timer font size
   static double getTimerFontSize(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.timerFontSizeLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.timerFontSizeTablet;
-    } else {
-      return GameConstants.timerFontSizeMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.timerFontSizeMobile,
+      tablet: GameConstants.timerFontSizeTablet,
+      largeTablet: GameConstants.timerFontSizeLargeTablet,
+    );
   }
 
   /// Get responsive ball padding
   static double getBallPadding(BuildContext context) {
-    if (isLargeTablet(context)) {
-      return GameConstants.ballPaddingLargeTablet;
-    } else if (isTablet(context)) {
-      return GameConstants.ballPaddingTablet;
-    } else {
-      return GameConstants.ballPaddingMobile;
-    }
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.ballPaddingMobile,
+      tablet: GameConstants.ballPaddingTablet,
+      largeTablet: GameConstants.ballPaddingLargeTablet,
+    );
   }
+
+  // Additional utility methods from ResponsiveUtils
+
+  /// Get responsive text style
+  static TextStyle getResponsiveTextStyle(
+    BuildContext context, {
+    required double baseFontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return TextStyle(
+      fontSize: getFontSize(context, baseFontSize),
+      fontWeight: fontWeight,
+      color: color ?? AppColors.textPrimary,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
+
+  /// Get responsive box shadow
+  static List<BoxShadow> getResponsiveBoxShadow(
+    BuildContext context, {
+    required Color color,
+    required double baseBlurRadius,
+    required double baseSpreadRadius,
+    required Offset baseOffset,
+  }) {
+    return [
+      BoxShadow(
+        color: color,
+        blurRadius: getSpacing(context, baseBlurRadius),
+        spreadRadius: getSpacing(context, baseSpreadRadius),
+        offset: baseOffset,
+      ),
+    ];
+  }
+}
+
+/// Internal enum for device types
+enum _DeviceType {
+  phone,
+  tablet,
+  largeTablet,
 }
 

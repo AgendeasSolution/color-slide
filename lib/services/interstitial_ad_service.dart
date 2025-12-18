@@ -3,12 +3,14 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-/// Service to manage interstitial ads
+/// Optimized service to manage interstitial ads
 class InterstitialAdService {
-  static InterstitialAdService? _instance;
-  static InterstitialAdService get instance => _instance ??= InterstitialAdService._();
+  static final InterstitialAdService _instance = InterstitialAdService._();
+  factory InterstitialAdService() => _instance;
   
   InterstitialAdService._();
+  
+  static InterstitialAdService get instance => _instance;
 
   InterstitialAd? _interstitialAd;
   bool _isAdReady = false;

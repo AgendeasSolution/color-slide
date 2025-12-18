@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../constants/app_colors.dart';
 import '../utils/responsive_helper.dart';
 import 'home_screen.dart';
 
@@ -108,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           scale: _scaleAnimation.value,
                           child: Image.asset(
                             'assets/img/logo.png',
-                            width: ResponsiveHelper.getSpacing(context, 300),
+                            width: ResponsiveHelper.getSpacing(context, 240),
                           ),
                         ),
                       ),
