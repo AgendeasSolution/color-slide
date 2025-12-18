@@ -459,20 +459,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Color? shadowColor;
     
     if (isCompleted) {
-      // Completed level - use purple from game board
-      cardColor = AppColors.ballColors['purple'];
-      borderColor = AppColors.ballColors['purple']!.withOpacity(0.8);
-      shadowColor = AppColors.ballColors['purple']!.withOpacity(0.4);
+      // Completed level - use yellow/orange gradient
+      cardColor = AppColors.ballColors['yellow'];
+      borderColor = AppColors.ballColors['yellow']!;
+      shadowColor = AppColors.ballColors['yellow']!.withOpacity(0.5);
     } else if (isUnlocked) {
-      // Unlocked level - use difficulty color from game board
-      cardColor = _getDifficultyColor(level.level);
-      borderColor = cardColor.withOpacity(0.8);
-      shadowColor = cardColor.withOpacity(0.4);
+      // Unlocked level - use blue/indigo gradient (same as lock icon background) - no opacity
+      cardColor = AppColors.ballColors['blue'];
+      borderColor = AppColors.ballColors['blue']!;
+      shadowColor = AppColors.ballColors['blue']!.withOpacity(0.5);
     } else {
-      // Locked level - use muted colors
+      // Locked level - use same color as solved level (green/teal)
       cardColor = null;
-      borderColor = AppColors.textMuted;
-      shadowColor = Colors.black.withOpacity(0.3);
+      borderColor = AppColors.ballColors['green']!;
+      shadowColor = AppColors.ballColors['green']!.withOpacity(0.5);
     }
     
     return GestureDetector(
@@ -486,20 +486,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ? LinearGradient(
                         colors: isCompleted
                               ? [
-                                  AppColors.ballColors['purple']!,
-                                  AppColors.ballColors['indigo']!,
+                                  AppColors.ballColors['yellow']!,
+                                  AppColors.ballColors['orange']!,
                                 ]
                               : [
-                                  cardColor!.withOpacity(0.3),
-                                  cardColor.withOpacity(0.15),
+                                  AppColors.ballColors['blue']!,
+                                  AppColors.ballColors['indigo']!,
                                 ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
                     : LinearGradient(
                         colors: [
-                          AppColors.bgCard,
-                          AppColors.bgCardHover,
+                          AppColors.ballColors['green']!,
+                          AppColors.ballColors['teal']!,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -543,28 +543,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                             SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.ballColors['purple']!,
-                              size: ResponsiveHelper.getIconSize(context, 28),
-                              shadows: [
-                                Shadow(
-                                  color: AppColors.ballColors['purple']!.withOpacity(0.6),
-                                  offset: const Offset(1, 1),
-                                  blurRadius: 3,
-                                ),
-                              ],
+                            Container(
+                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 4)),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.ballColors['yellow']!.withOpacity(0.5),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: AppColors.ballColors['orange']!,
+                                size: ResponsiveHelper.getIconSize(context, 24),
+                              ),
                             ),
                           ] else if (isUnlocked) ...[
-                            // Unlocked level - using game board colors
+                            // Unlocked level - using blue/indigo gradient
                             Container(
                               padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 10)),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: _getDifficultyColor(level.level),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.ballColors['cyan']!,
+                                    AppColors.ballColors['blue']!,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: _getDifficultyColor(level.level).withOpacity(0.6),
+                                    color: AppColors.ballColors['blue']!.withOpacity(0.6),
                                     blurRadius: 8,
                                     spreadRadius: 2,
                                     offset: const Offset(0, 2),
@@ -605,14 +620,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                           ] else ...[
-                            // Locked level - solid colors, no opacity, game-like design
-                            // Level number - centered
+                            // Locked level - solid orange background
+                            // Level number - white for visibility
                             Text(
                               '${level.level}',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 18),
+                                fontSize: ResponsiveHelper.getFontSize(context, 22),
                                 fontWeight: FontWeight.w900,
-                                color: AppColors.textMuted,
+                                color: Colors.white,
                                 shadows: [
                                   Shadow(
                                     color: Colors.black.withOpacity(0.8),
@@ -623,37 +638,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                             SizedBox(height: ResponsiveHelper.getSpacing(context, 6)),
-                            // Lock icon - solid colors, no opacity
-                            Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 8)),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.ballColors['purple']!,
-                                border: Border.all(
-                                  color: AppColors.ballColors['indigo']!,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.ballColors['purple']!.withOpacity(0.5),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.lock,
-                                color: Colors.white,
-                                size: ResponsiveHelper.getIconSize(context, 18),
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.8),
-                                    offset: const Offset(1, 1),
-                                    blurRadius: 3,
-                                  ),
-                                ],
-                              ),
+                            // Lock icon - white for visibility, no shadow
+                            Icon(
+                              Icons.lock,
+                              color: Colors.white,
+                              size: ResponsiveHelper.getIconSize(context, 26),
                             ),
                         ],
                       ],
