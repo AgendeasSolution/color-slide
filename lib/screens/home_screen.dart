@@ -859,7 +859,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Text(
                               'Explore More Games',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 14),
+                                fontSize: ResponsiveHelper.getFontSize(context, 16),
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.textPrimary,
                                 letterSpacing: 1.2,
@@ -895,7 +895,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Container(
                                 constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 200),
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 150),
                                 ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
@@ -932,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
                                         vertical: ResponsiveHelper.getSpacing(context, 12),
-                                        horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                        horizontal: ResponsiveHelper.getSpacing(context, 10),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -948,7 +948,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             child: Text(
                                               'Mobile Games',
                                               style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                fontSize: ResponsiveHelper.getFontSize(context, 16),
                                                 fontWeight: FontWeight.w900,
                                                 color: Colors.white,
                                                 letterSpacing: 1.0,
@@ -977,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Expanded(
                               child: Container(
                                 constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 200),
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 150),
                                 ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
@@ -1013,8 +1013,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
-                                        vertical: ResponsiveHelper.getSpacing(context, 12),
-                                        horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                        vertical: ResponsiveHelper.getSpacing(context, 10),
+                                        horizontal: ResponsiveHelper.getSpacing(context, 10),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -1030,7 +1030,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             child: Text(
                                               'Web Games',
                                               style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                fontSize: ResponsiveHelper.getFontSize(context, 16),
                                                 fontWeight: FontWeight.w900,
                                                 color: Colors.white,
                                                 letterSpacing: 1.0,
