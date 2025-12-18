@@ -422,9 +422,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final gridSpacing = ResponsiveHelper.getSpacing(context, 8);
 
     return SingleChildScrollView(
+      padding: EdgeInsets.zero,
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: gridSpacing,
@@ -810,431 +812,369 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           // Content with SafeArea
           SafeArea(
-            child: Column(
+            child: Stack(
               children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: verticalPadding,
+                // Main content
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header Section with logo - with spacing
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 40)),
+                    Container(
+                      margin: EdgeInsets.zero,
+                      padding: EdgeInsets.zero,
+                      child: Image.asset(
+                        'assets/img/logo.png',
+                        width: ResponsiveHelper.getSpacing(context, 250),
+                      ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                          // Header Section with animated title
-                          AnimatedBuilder(
-                            animation: _floatAnimation,
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(0, _floatAnimation.value * 0.3),
-                                child: Column(
-                            children: [
-                                    // App Title with stunning gradient and glow
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: ResponsiveHelper.getSpacing(context, 20),
-                                        vertical: ResponsiveHelper.getSpacing(context, 10),
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          ResponsiveHelper.getBorderRadius(context, 30),
-                                        ),
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0x20FF6B35),
-                                            Color(0x104ECDC4),
-                                            Color(0x20FFE66D),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary.withOpacity(0.3),
-                                            blurRadius: ResponsiveHelper.getSpacing(context, 30),
-                                            spreadRadius: ResponsiveHelper.getSpacing(context, 5),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ShaderMask(
-                                shaderCallback: (bounds) => const LinearGradient(
-                                          colors: [
-                                            AppColors.gradientStart,
-                                            AppColors.gradientEnd,
-                                            AppColors.secondary,
-                                          ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds),
-                                    child: Text(
-                                      'COLOR SLIDE',
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
+                    // Level Selector Grid - after logo with spacing
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: _buildLevelGrid(context),
+                      ),
+                    ),
+                    
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
+                    
+                    // Explore More Games Heading (centered)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: ResponsiveHelper.getIconSize(context, 16),
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
+                            Text(
+                              'Explore More Games',
                               style: TextStyle(
-                                        fontSize: ResponsiveHelper.getFontSize(context, 32),
-                                        fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                        letterSpacing: 2.5,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black.withOpacity(0.5),
-                                            offset: Offset(
-                                              ResponsiveHelper.getSpacing(context, 2),
-                                              ResponsiveHelper.getSpacing(context, 2),
-                                            ),
-                                            blurRadius: ResponsiveHelper.getSpacing(context, 8),
-                                          ),
-                                        ],
-                                      ),
-                              ),
+                                fontSize: ResponsiveHelper.getFontSize(context, 14),
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.8),
+                                    offset: Offset(
+                                      ResponsiveHelper.getSpacing(context, 1),
+                                      ResponsiveHelper.getSpacing(context, 1),
                                     ),
-                          ),
-                              
-                              SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
-                            ],
-                                ),
-                              );
-                            },
-                          ),
-                          
-                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
-                          
-                          // Level Selector Grid
-                          Expanded(
-                            child: _buildLevelGrid(context),
-                          ),
-                          
-                          SizedBox(height: ResponsiveHelper.getSpacing(context, 12)),
-                          
-                          // Sound and How to Play buttons in same row (icon-only, square)
-                          Center(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // How to Play button (icon-only, matching sound button style)
-                                Container(
-                                  width: ResponsiveHelper.getButtonHeight(context),
-                                  height: ResponsiveHelper.getButtonHeight(context),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                      ResponsiveHelper.getBorderRadius(context, 8),
-                                    ),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.bgCard.withOpacity(0.2),
-                                        AppColors.bgCardHover.withOpacity(0.1),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    border: Border.all(
-                                      color: AppColors.primary.withOpacity(0.3),
-                                      width: ResponsiveHelper.getSpacing(context, 1.5),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primary.withOpacity(0.15),
-                                        blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                        spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                        offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: _showHowToPlay,
-                                      borderRadius: BorderRadius.circular(
-                                        ResponsiveHelper.getBorderRadius(context, 8),
-                                      ),
-                                      child: Icon(
-                                        Icons.help_outline,
-                                        color: AppColors.primary,
-                                        size: ResponsiveHelper.getIconSize(context, 24),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                
-                                SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
-                                
-                                // Sound toggle button (icon-only, rounded)
-                                Container(
-                                  width: ResponsiveHelper.getButtonHeight(context),
-                                  height: ResponsiveHelper.getButtonHeight(context),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                      ResponsiveHelper.getBorderRadius(context, 8),
-                                    ),
-                                    gradient: LinearGradient(
-                                      colors: _isSoundEnabled
-                                          ? [
-                                              AppColors.bgCard.withOpacity(0.2),
-                                              AppColors.bgCardHover.withOpacity(0.1),
-                                            ]
-                                          : [
-                                              AppColors.bgCard.withOpacity(0.15),
-                                              AppColors.bgCardHover.withOpacity(0.08),
-                                            ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    border: Border.all(
-                                      color: _isSoundEnabled
-                                          ? AppColors.primary.withOpacity(0.3)
-                                          : AppColors.textMuted.withOpacity(0.3),
-                                      width: ResponsiveHelper.getSpacing(context, 1.5),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _isSoundEnabled
-                                            ? AppColors.primary.withOpacity(0.15)
-                                            : Colors.black.withOpacity(0.2),
-                                        blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                        spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                        offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: _toggleSound,
-                                      borderRadius: BorderRadius.circular(
-                                        ResponsiveHelper.getBorderRadius(context, 8),
-                                      ),
-                                      child: Icon(
-                                        _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
-                                        color: _isSoundEnabled
-                                            ? AppColors.primary
-                                            : AppColors.textMuted,
-                                        size: ResponsiveHelper.getIconSize(context, 24),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
-                          
-                          // Explore More Games Heading (centered)
-                          Center(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: ResponsiveHelper.getIconSize(context, 16),
-                                  color: AppColors.primary,
-                                ),
-                                SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                Text(
-                                  'Explore More Games',
-                                  style: TextStyle(
-                                    fontSize: ResponsiveHelper.getFontSize(context, 14),
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.textPrimary,
-                                    letterSpacing: 1.2,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.8),
-                                        offset: Offset(
-                                          ResponsiveHelper.getSpacing(context, 1),
-                                          ResponsiveHelper.getSpacing(context, 1),
-                                        ),
-                                        blurRadius: ResponsiveHelper.getSpacing(context, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          SizedBox(height: ResponsiveHelper.getSpacing(context, 10)),
-                          
-                          // Mobile Games and Web Games buttons in same row (not full width)
-                          Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveHelper.getSpacing(context, 16),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Mobile Games button (purple)
-                                  Flexible(
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth: ResponsiveHelper.screenWidth(context) * 0.42,
-                                      ),
-                                      height: ResponsiveHelper.getButtonHeight(context),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          ResponsiveHelper.getBorderRadius(context, 24),
-                                        ),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.neonPurple.withOpacity(0.8),
-                                          AppColors.neonPurple.withOpacity(0.6),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      border: Border.all(
-                                        color: AppColors.neonPurple.withOpacity(0.5),
-                                        width: ResponsiveHelper.getSpacing(context, 1.5),
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.neonPurple.withOpacity(0.3),
-                                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: _navigateToMobileGames,
-                                        borderRadius: BorderRadius.circular(
-                                          ResponsiveHelper.getBorderRadius(context, 24),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: ResponsiveHelper.getSpacing(context, 16),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.smartphone,
-                                                color: Colors.white,
-                                                size: ResponsiveHelper.getIconSize(context, 20),
-                                              ),
-                                              SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                              Flexible(
-                                                child: Text(
-                                                  'Mobile Games',
-                                                  style: TextStyle(
-                                                    fontSize: ResponsiveHelper.getFontSize(context, 12),
-                                                    fontWeight: FontWeight.w900,
-                                                    color: Colors.white,
-                                                    letterSpacing: 1.0,
-                                                    shadows: [
-                                                      Shadow(
-                                                        color: Colors.black.withOpacity(0.6),
-                                                        offset: const Offset(1, 1),
-                                                        blurRadius: 2,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  ),
-                                  
-                                  SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
-                                  
-                                  // Web Games button (blue)
-                                  Flexible(
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth: ResponsiveHelper.screenWidth(context) * 0.42,
-                                      ),
-                                      height: ResponsiveHelper.getButtonHeight(context),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          ResponsiveHelper.getBorderRadius(context, 24),
-                                        ),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.secondary.withOpacity(0.8),
-                                          AppColors.secondary.withOpacity(0.6),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      border: Border.all(
-                                        color: AppColors.secondary.withOpacity(0.5),
-                                        width: ResponsiveHelper.getSpacing(context, 1.5),
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.secondary.withOpacity(0.3),
-                                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: _navigateToWebGames,
-                                        borderRadius: BorderRadius.circular(
-                                          ResponsiveHelper.getBorderRadius(context, 24),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: ResponsiveHelper.getSpacing(context, 16),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.laptop,
-                                                color: Colors.white,
-                                                size: ResponsiveHelper.getIconSize(context, 20),
-                                              ),
-                                              SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                              Flexible(
-                                                child: Text(
-                                                  'Web Games',
-                                                  style: TextStyle(
-                                                    fontSize: ResponsiveHelper.getFontSize(context, 12),
-                                                    fontWeight: FontWeight.w900,
-                                                    color: Colors.white,
-                                                    letterSpacing: 1.0,
-                                                    shadows: [
-                                                      Shadow(
-                                                        color: Colors.black.withOpacity(0.6),
-                                                        offset: const Offset(1, 1),
-                                                        blurRadius: 2,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                    blurRadius: ResponsiveHelper.getSpacing(context, 2),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 10)),
+                    
+                    // Mobile Games and Web Games buttons in same row (not full width)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Mobile Games button
+                            Expanded(
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 200),
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                    ResponsiveHelper.getBorderRadius(context, 24),
+                                  ),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.neonPurple.withOpacity(0.8),
+                                      AppColors.neonPurple.withOpacity(0.6),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.neonPurple.withOpacity(0.5),
+                                    width: ResponsiveHelper.getSpacing(context, 1.5),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.neonPurple.withOpacity(0.3),
+                                      blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                      spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                      offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _navigateToMobileGames,
+                                    borderRadius: BorderRadius.circular(
+                                      ResponsiveHelper.getBorderRadius(context, 24),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: ResponsiveHelper.getSpacing(context, 12),
+                                        horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.smartphone,
+                                            size: ResponsiveHelper.getIconSize(context, 20),
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
+                                          Flexible(
+                                            child: Text(
+                                              'Mobile Games',
+                                              style: TextStyle(
+                                                fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                                letterSpacing: 1.0,
+                                                shadows: [
+                                                  Shadow(
+                                                    color: Colors.black.withOpacity(0.6),
+                                                    offset: const Offset(1, 1),
+                                                    blurRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
+                            
+                            // Web Games button
+                            Expanded(
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: ResponsiveHelper.getSpacing(context, 200),
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                    ResponsiveHelper.getBorderRadius(context, 24),
+                                  ),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.secondary.withOpacity(0.8),
+                                      AppColors.secondary.withOpacity(0.6),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.secondary.withOpacity(0.5),
+                                    width: ResponsiveHelper.getSpacing(context, 1.5),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.secondary.withOpacity(0.3),
+                                      blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                                      spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                                      offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _navigateToWebGames,
+                                    borderRadius: BorderRadius.circular(
+                                      ResponsiveHelper.getBorderRadius(context, 24),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: ResponsiveHelper.getSpacing(context, 12),
+                                        horizontal: ResponsiveHelper.getSpacing(context, 16),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.laptop,
+                                            size: ResponsiveHelper.getIconSize(context, 20),
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
+                                          Flexible(
+                                            child: Text(
+                                              'Web Games',
+                                              style: TextStyle(
+                                                fontSize: ResponsiveHelper.getFontSize(context, 12),
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                                letterSpacing: 1.0,
+                                                shadows: [
+                                                  Shadow(
+                                                    color: Colors.black.withOpacity(0.6),
+                                                    offset: const Offset(1, 1),
+                                                    blurRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    // Ad Banner at the bottom with proper spacing
+                    Container(
+                      margin: EdgeInsets.only(
+                        bottom: ResponsiveHelper.getSpacing(context, 8),
+                        top: ResponsiveHelper.getSpacing(context, 12),
+                      ),
+                      child: const AdBanner(),
+                    ),
+                  ],
+                ),
+                
+                // How to Play button in top-left corner
+                Positioned(
+                  top: ResponsiveHelper.getSpacing(context, 2),
+                  left: horizontalPadding,
+                  child: Container(
+                    width: ResponsiveHelper.getButtonHeight(context),
+                    height: ResponsiveHelper.getButtonHeight(context),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveHelper.getBorderRadius(context, 8),
+                      ),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.bgCard.withOpacity(0.2),
+                          AppColors.bgCardHover.withOpacity(0.1),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.3),
+                        width: ResponsiveHelper.getSpacing(context, 1.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.15),
+                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _showHowToPlay,
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveHelper.getBorderRadius(context, 8),
+                        ),
+                        child: Icon(
+                          Icons.help_outline,
+                          color: AppColors.primary,
+                          size: ResponsiveHelper.getIconSize(context, 24),
+                        ),
                       ),
                     ),
                   ),
-                // Ad Banner at the bottom with proper spacing
-                Container(
-                  margin: EdgeInsets.only(bottom: ResponsiveHelper.getSpacing(context, 8)),
-                  child: const AdBanner(),
+                ),
+                
+                // Sound toggle button in top-right corner
+                Positioned(
+                  top: ResponsiveHelper.getSpacing(context, 2),
+                  right: horizontalPadding,
+                  child: Container(
+                    width: ResponsiveHelper.getButtonHeight(context),
+                    height: ResponsiveHelper.getButtonHeight(context),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveHelper.getBorderRadius(context, 8),
+                      ),
+                      gradient: LinearGradient(
+                        colors: _isSoundEnabled
+                            ? [
+                                AppColors.bgCard.withOpacity(0.2),
+                                AppColors.bgCardHover.withOpacity(0.1),
+                              ]
+                            : [
+                                AppColors.bgCard.withOpacity(0.15),
+                                AppColors.bgCardHover.withOpacity(0.08),
+                              ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(
+                        color: _isSoundEnabled
+                            ? AppColors.primary.withOpacity(0.3)
+                            : AppColors.textMuted.withOpacity(0.3),
+                        width: ResponsiveHelper.getSpacing(context, 1.5),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isSoundEnabled
+                              ? AppColors.primary.withOpacity(0.15)
+                              : Colors.black.withOpacity(0.2),
+                          blurRadius: ResponsiveHelper.getSpacing(context, 12),
+                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
+                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _toggleSound,
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveHelper.getBorderRadius(context, 8),
+                        ),
+                        child: Icon(
+                          _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                          color: _isSoundEnabled
+                              ? AppColors.primary
+                              : AppColors.textMuted,
+                          size: ResponsiveHelper.getIconSize(context, 24),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

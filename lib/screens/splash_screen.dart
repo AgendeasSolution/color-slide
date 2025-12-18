@@ -125,153 +125,69 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               ),
             ),
             
-            // Main content
-            SafeArea(
-              child: Column(
-                children: [
-                  // Top spacer
-                  Expanded(
-                    flex: 1,
-                    child: Container(),
-                  ),
-                  
-                  // Logo section
-                  Expanded(
-                    flex: 2,
-                    child: AnimatedBuilder(
-                      animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _floatAnimation.value * 0.5),
-                          child: Opacity(
-                            opacity: _fadeAnimation.value,
-                            child: Transform.scale(
-                              scale: _scaleAnimation.value,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // App Title with stunning gradient and glow
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0x20FF6B35),
-                                          Color(0x104ECDC4),
-                                          Color(0x20FFE66D),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.primary.withOpacity(0.4),
-                                          blurRadius: 40,
-                                          spreadRadius: 8,
-                                        ),
-                                      ],
-                                    ),
-                                    child: ShaderMask(
-                                      shaderCallback: (bounds) => const LinearGradient(
-                                        colors: [
-                                          AppColors.gradientStart,
-                                          AppColors.gradientEnd,
-                                          AppColors.secondary,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ).createShader(bounds),
-                                      child: Text(
-                                        'COLOR SLIDE',
-                                        style: TextStyle(
-                                          fontSize: ResponsiveHelper.getFontSize(context, 28),
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                          letterSpacing: 3,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.black.withOpacity(0.8),
-                                              offset: const Offset(2, 2),
-                                              blurRadius: 8,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  
-                                  SizedBox(height: ResponsiveHelper.getSpacing(context, 20)),
-                                  
-                                  // Subtitle
-                                  Text(
-                                    'Master the Art of Color',
-                                    style: TextStyle(
-                                      fontSize: ResponsiveHelper.getFontSize(context, 14),
-                                      color: AppColors.textAccent,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.5,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black.withOpacity(0.8),
-                                          offset: const Offset(1, 1),
-                                          blurRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+            // Main content - Logo centered
+            Center(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_fadeAnimation, _scaleAnimation, _floatAnimation]),
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatAnimation.value),
+                    child: Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Image.asset(
+                          'assets/img/logo.png',
+                          width: ResponsiveHelper.getSpacing(context, 250),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
+            // Developer credit at bottom - independent positioning
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: AnimatedBuilder(
+                    animation: _fadeAnimation,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _fadeAnimation.value * 0.8,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'developed by',
+                              style: TextStyle(
+                                fontSize: ResponsiveHelper.getFontSize(context, 16),
+                                color: Colors.white.withOpacity(0.8),
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 1.0,
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  
-                  // Developer credit section - moved to bottom
-                  Expanded(
-                    flex: 1,
-                    child: Container(),
-                  ),
-                  
-                  // Developer credit section at bottom
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: AnimatedBuilder(
-                      animation: _fadeAnimation,
-                      builder: (context, child) {
-                        return Opacity(
-                          opacity: _fadeAnimation.value * 0.8,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'developed by',
-                                style: TextStyle(
-                                  fontSize: ResponsiveHelper.getFontSize(context, 10),
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: 1.0,
-                                ),
+                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
+                            Text(
+                              'FGTP Labs',
+                              style: TextStyle(
+                                fontSize: ResponsiveHelper.getFontSize(context, 20),
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
                               ),
-                              SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
-                              Text(
-                                'FGTP Labs',
-                                style: TextStyle(
-                                  fontSize: ResponsiveHelper.getFontSize(context, 14),
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                ],
+                ),
               ),
             ),
           ],
