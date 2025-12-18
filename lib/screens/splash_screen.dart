@@ -87,44 +87,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bgDark, AppColors.bgDarker],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          image: DecorationImage(
+            image: AssetImage('assets/img/bg.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Stack(
           children: [
-            // Subtle gradient overlays for depth
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-0.8, -0.8),
-                  radius: 1.0,
-                  colors: [
-                    Color(0x15FF6B35),
-                    Color(0x08FF6B35),
-                    Colors.transparent,
-                  ],
-                  stops: [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0.8, 0.8),
-                  radius: 1.0,
-                  colors: [
-                    Color(0x154ECDC4),
-                    Color(0x084ECDC4),
-                    Colors.transparent,
-                  ],
-                  stops: [0.0, 0.4, 1.0],
-                ),
-              ),
-            ),
-            
             // Main content - Logo centered
             Center(
               child: AnimatedBuilder(

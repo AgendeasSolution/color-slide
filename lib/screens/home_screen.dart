@@ -765,49 +765,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient - fills entire screen including safe areas
+          // Background image - fills entire screen including safe areas
           Container(
             width: double.infinity,
             height: double.infinity,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.bgDark, AppColors.bgDarker],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              image: DecorationImage(
+                image: AssetImage('assets/img/bg.png'),
+                fit: BoxFit.cover,
               ),
-            ),
-            child: Stack(
-              children: [
-                // Subtle gradient overlays for depth - less blur
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment(-0.8, -0.8),
-                      radius: 1.0,
-                      colors: [
-                        Color(0x15FF6B35),
-                        Color(0x08FF6B35),
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.4, 1.0],
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment(0.8, 0.8),
-                      radius: 1.0,
-                      colors: [
-                        Color(0x154ECDC4),
-                        Color(0x084ECDC4),
-                        Colors.transparent,
-                      ],
-                      stops: [0.0, 0.4, 1.0],
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
           // Content with SafeArea
