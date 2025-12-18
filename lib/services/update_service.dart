@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'connectivity_service.dart';
 
 /// Service for checking app updates from App Store and Play Store
@@ -14,20 +16,46 @@ class UpdateService {
   static const String _appStoreUrl = 'https://apps.apple.com/us/app/color-slide-ball-slide-puzzle/id6754687571';
   static const String _playStoreUrl = 'https://play.google.com/store/apps/details?id=com.fgtp.color_slide';
   
-  // Current app version from pubspec.yaml
-  static const String _currentVersion = '1.0.2';
+  // Preference keys
+  static const String _lastShownTimestampKey = 'update_popup_last_shown';
+  
+  // Cache for package info
+  PackageInfo? _packageInfo;
+  String? _cachedVersion;
   
   final ConnectivityService _connectivityService = ConnectivityService();
+  
+  /// Initialize and cache package info
+  Future<void> _ensurePackageInfo() async {
+    if (_packageInfo == null) {
+      _packageInfo = await PackageInfo.fromPlatform();
+      _cachedVersion = _packageInfo!.version;
+    }
+  }
+  
+  /// Get current app version dynamically
+  Future<String> _getCurrentVersion() async {
+    await _ensurePackageInfo();
+    return _cachedVersion ?? '1.0.0';
+  }
 
-  /// Check if an update is available
-  /// Returns true if update is available, false otherwise
+  /// Check if an update is available and if pop-up should be shown
+  /// Returns true if update is available and 24 hours have passed since last shown
   Future<bool> checkForUpdate() async {
     try {
+      // Check if pop-up was shown in the last 24 hours
+      if (!await _shouldShowPopup()) {
+        return false;
+      }
+
       // Check internet connectivity first
       final hasInternet = await _connectivityService.hasInternetConnection();
       if (!hasInternet) {
         return false;
       }
+
+      // Get current app version
+      final currentVersion = await _getCurrentVersion();
 
       // Get platform-specific store version
       String? storeVersion;
@@ -42,10 +70,50 @@ class UpdateService {
       }
 
       // Compare versions
-      return _isVersionNewer(storeVersion, _currentVersion);
+      return _isVersionNewer(storeVersion, currentVersion);
     } catch (e) {
       return false;
     }
+  }
+
+  /// Check if pop-up should be shown (24 hours have passed since last shown)
+  Future<bool> _shouldShowPopup() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastShownTimestamp = prefs.getInt(_lastShownTimestampKey);
+      
+      // If never shown before, allow showing
+      if (lastShownTimestamp == null) {
+        return true;
+      }
+      
+      // Calculate time difference
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final timeDifference = now - lastShownTimestamp;
+      const oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      
+      // Show if 24 hours have passed
+      return timeDifference >= oneDayInMillis;
+    } catch (e) {
+      // On error, allow showing (fail open)
+      return true;
+    }
+  }
+
+  /// Mark the pop-up as shown (store current timestamp)
+  Future<void> _markPopupAsShown() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await prefs.setInt(_lastShownTimestampKey, now);
+    } catch (e) {
+      // Silently handle error
+    }
+  }
+
+  /// Mark the pop-up as dismissed (same as shown, to prevent showing again today)
+  Future<void> markPopupAsDismissed() async {
+    await _markPopupAsShown();
   }
 
   /// Get App Store version by parsing the HTML
@@ -151,8 +219,8 @@ class UpdateService {
   }
 
   /// Get current app version
-  String getCurrentVersion() {
-    return _currentVersion;
+  Future<String> getCurrentVersion() async {
+    return await _getCurrentVersion();
   }
 }
 

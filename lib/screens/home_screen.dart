@@ -103,7 +103,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _dismissUpdatePopup() {
+  void _dismissUpdatePopup() async {
+    // Mark pop-up as dismissed so it won't show again for 24 hours
+    try {
+      await _updateService.markPopupAsDismissed();
+    } catch (e) {
+      // Silently handle error
+    }
+    
     if (mounted) {
       setState(() {
         _showUpdatePopup = false;
