@@ -80,10 +80,10 @@ class GameBoard extends StatelessWidget {
           width: boardWidth,
           height: boardHeight,
           decoration: BoxDecoration(
-            color: AppColors.bgDarker,
+            color: AppColors.bgDarker.withOpacity(0.55),
             borderRadius: BorderRadius.circular(cardBorderRadius),
             border: Border.all(
-              color: AppColors.gameAccent.withOpacity(0.25),
+              color: AppColors.gameAccent.withOpacity(0.45),
               width: 2,
             ),
             boxShadow: [
@@ -126,7 +126,7 @@ class GameBoard extends StatelessWidget {
                     padding: EdgeInsets.all(cellPadding),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.bgCell,
+                        color: AppColors.bgCell.withOpacity(0.75),
                         borderRadius: BorderRadius.circular(cellRadius),
                       ),
                       padding: EdgeInsets.all(ResponsiveHelper.getCandyImagePadding(context)),

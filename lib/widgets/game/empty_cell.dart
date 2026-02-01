@@ -17,7 +17,7 @@ class EmptyCell extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bgCell,
+          color: AppColors.bgCell.withOpacity(0.85),
           borderRadius: BorderRadius.circular(GameConstants.borderRadius),
         ),
       ),
