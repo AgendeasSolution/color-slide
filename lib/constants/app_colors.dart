@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
 
 /// App color constants for consistent theming throughout the game
+/// Aligned with CSS variables (game-accent, bg-dark, bg-card, etc.)
 class AppColors {
-  // Primary colors - Vibrant game colors
-  static const primary = Color(0xFFFF6B35);
-  static const primaryHover = Color(0xFFE55A2B);
-  static const secondary = Color(0xFF4ECDC4);
-  static const accent = Color(0xFFFFE66D);
+  // Game accent (arcade / primary UI, buttons)
+  static const gameAccent = Color(0xFF00E5FF);
+  static const gameAccentHover = Color(0xFF00B8D4);
+  static const gameAccentHoverBright = Color(0xFF33EBFF); // Hover background
+  static const gameAccentPress = Color(0xFF0097A7); // Bottom of 3D shadow, press state
+  static const gameAccentGlow = Color(0x9900E5FF); // rgba(0, 229, 255, 0.6)
+  static const gameAccentDim = Color(0x3300E5FF); // rgba(0, 229, 255, 0.2)
+  /// Dark text on accent buttons (icon-btn, modal-btn)
+  static const iconBtnTextColor = Color(0xFF0A0E14);
+
+  // Primary colors - use game accent as primary
+  static const primary = Color(0xFF00E5FF);
+  static const primaryHover = Color(0xFF00B8D4);
+  static const secondary = Color(0xFF00E5FF);
+  static const accent = Color(0xFF00E5FF);
   
   // Gradient colors for logo and UI elements
-  static const gradientStart = Color(0xFFFF6B35);
-  static const gradientEnd = Color(0xFFFFE66D);
-  static const gradientSecondary = Color(0xFF4ECDC4);
-  static const gradientTertiary = Color(0xFF45B7AA);
+  static const gradientStart = Color(0xFF00E5FF);
+  static const gradientEnd = Color(0xFF00B8D4);
+  static const gradientSecondary = Color(0xFF00E5FF);
+  static const gradientTertiary = Color(0xFF0097A7);
   
-  // Background colors - Deep space theme
-  static const bgDark = Color(0xFF0A0A0F);
-  static const bgDarker = Color(0xFF050508);
-  static const bgCard = Color(0xFF1A1A2E);
-  static const bgCardHover = Color(0xFF2A2A3E);
+  // Background colors - dark theme (--bg-dark, --bg-darker, --bg-card)
+  static const bgDark = Color(0xFF0A0E14);
+  static const bgDarker = Color(0xFF05080C);
+  static const bgCard = Color(0xFF0D1219);
+  static const bgCardHover = Color(0xFF141C26);
   
   // Neon accent colors
   static const neonBlue = Color(0xFF00D4FF);
@@ -26,18 +37,18 @@ class AppColors {
   static const neonGreen = Color(0xFF00FF88);
   static const neonPurple = Color(0xFF8A2BE2);
   
-  // Text colors
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textSecondary = Color(0xFFB8B8D1);
-  static const textMuted = Color(0xFF6B6B8A);
-  static const textAccent = Color(0xFFFFE66D);
+  // Text colors (--text-primary, --text-secondary, --text-muted)
+  static const textPrimary = Color(0xFFE8F4F8);
+  static const textSecondary = Color(0xFF7DD3FC);
+  static const textMuted = Color(0xFF0E7490);
+  static const textAccent = Color(0xFF00E5FF);
 
-  /// Ball colors used in the game - Enhanced vibrant colors
+  /// Ball colors (fallback / legacy; emoji cells don't use these for fill)
   static const Map<String, Color> ballColors = {
-    'red': Color(0xFFff6b6b),
+    'red': Color(0xFFff8585),
     'blue': Color(0xFF3b82f6),
     'yellow': Color(0xFFffe66d),
-    'green': Color(0xFF95e1d3),
+    'green': Color(0xFF849E00),
     'purple': Color(0xFF9c27b0),
     'orange': Color(0xFFff9800),
     'cyan': Color(0xFF00bcd4),

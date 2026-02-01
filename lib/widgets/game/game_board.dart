@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../constants/app_colors.dart';
+import '../../constants/tile_image_constants.dart';
 import '../../constants/game_constants.dart';
 import '../../utils/responsive_helper.dart';
 import '../../models/level.dart';
-import 'game_ball.dart';
+import '../../services/sound_service.dart';
 import 'empty_cell.dart';
 
 /// Game board widget
@@ -29,22 +30,22 @@ class GameBoard extends StatelessWidget {
     final gridSpacing = ResponsiveHelper.getGridSpacing(context);
     final cardBorderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.cardBorderRadius);
     final padding = ResponsiveHelper.getSpacing(context, 10);
+    final cellPadding = ResponsiveHelper.getBallPadding(context);
     final maxBoardWidth = ResponsiveHelper.getMaxBoardWidth(context);
     
     // Calculate available space from parent constraints
     final screenHeight = ResponsiveHelper.screenHeight(context);
     final screenWidth = ResponsiveHelper.screenWidth(context);
     
-    // Estimate header + timer + spacing (conservative estimate)
+    // Estimate header + spacing (timer removed)
     final headerHeight = ResponsiveHelper.getButtonHeight(context);
-    final timerHeight = ResponsiveHelper.getSpacing(context, 50); // Timer widget height estimate
     final topSpacing = ResponsiveHelper.getSpacing(context, 24);
     final bottomSpacing = ResponsiveHelper.getSpacing(context, 100); // Ad banner + safe area
-    final colorIndicatorsHeight = ResponsiveHelper.getSpacing(context, 30);
+    final colorIndicatorsHeight = ResponsiveHelper.getSpacing(context, 42);
     final colorIndicatorsSpacing = ResponsiveHelper.getSpacing(context, 12);
     
     // Calculate available vertical space
-    final availableHeight = screenHeight - headerHeight - timerHeight - topSpacing - bottomSpacing - colorIndicatorsHeight - colorIndicatorsSpacing;
+    final availableHeight = screenHeight - headerHeight - topSpacing - bottomSpacing - colorIndicatorsHeight - colorIndicatorsSpacing;
     
     // Calculate board dimensions based on aspect ratio and available space
     final aspectRatio = config.columns / config.rows;
@@ -79,24 +80,15 @@ class GameBoard extends StatelessWidget {
           width: boardWidth,
           height: boardHeight,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: config.colors.map((colorName) => 
-                AppColors.ballColors[colorName]!.withOpacity(0.15)
-              ).toList(),
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: AppColors.bgCard,
             borderRadius: BorderRadius.circular(cardBorderRadius),
             border: Border.all(
-              color: config.colors.isNotEmpty 
-                ? AppColors.ballColors[config.colors.first]!.withOpacity(0.3)
-                : AppColors.primary.withOpacity(0.1)
+              color: AppColors.gameAccent.withOpacity(0.25),
+              width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: config.colors.isNotEmpty 
-                  ? AppColors.ballColors[config.colors.first]!.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.2),
+                color: AppColors.gameAccentGlow.withOpacity(0.15),
                 blurRadius: ResponsiveHelper.getSpacing(context, 35),
                 offset: Offset(0, ResponsiveHelper.getSpacing(context, 15)),
               ),
@@ -116,12 +108,30 @@ class GameBoard extends StatelessWidget {
               itemCount: boardState.length,
               itemBuilder: (context, index) {
                 final colorName = boardState[index];
-                return colorName != null
-                    ? GameBall(
-                        colorName: colorName,
-                        onTap: () => onCellTap(index),
-                      )
-                    : const EmptyCell();
+                if (colorName == null) {
+                  return Padding(
+                    padding: EdgeInsets.all(cellPadding),
+                    child: const EmptyCell(),
+                  );
+                }
+                final colorIndex = config.colors.indexOf(colorName);
+                final imagePath = TileImageConstants.imageForColorIndex(colorIndex);
+                return GestureDetector(
+                  onTap: () {
+                    SoundService.instance.playSwipe();
+                    onCellTap(index);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(cellPadding),
+                    child: Center(
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ),

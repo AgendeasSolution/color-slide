@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../utils/responsive_helper.dart';
 import '../widgets/common/game_dialog.dart';
 import '../widgets/common/dialog_button.dart';
 import '../widgets/common/ad_banner.dart';
+import '../widgets/common/accent_icon_button.dart';
+import '../widgets/common/gradient_action_button.dart';
+import '../widgets/common/background_image.dart';
 import '../widgets/dialogs/how_to_play_content.dart';
 import '../services/progress_service.dart';
 import '../services/sound_service.dart';
@@ -25,8 +28,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late AnimationController _shimmerController;
-  
   // Level selector state
   List<bool> _levelUnlocked = [];
   List<bool> _levelCompleted = [];
@@ -42,14 +43,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _showUpdatePopup = false;
   final UpdateService _updateService = UpdateService();
   
-  // Carousel state
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
     _initializeSoundService();
     _loadProgress();
     _loadSoundState();
@@ -124,20 +120,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.didChangeDependencies();
     // Refresh progress when returning from game screen
     _loadProgress();
-  }
-
-  @override
-  void dispose() {
-    _shimmerController.dispose();
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _initializeAnimations() {
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
   }
 
   Future<void> _loadProgress() async {
@@ -391,334 +373,167 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    // Split levels into chunks of 9 (3x3 grid)
-    const int levelsPerPage = 9; // 3 rows × 3 columns
+    // Current level = next level to play (first incomplete, or level 1 if all complete)
     final totalLevels = GameLevels.levels.length;
-    final totalPages = (totalLevels / levelsPerPage).ceil();
-    
-    return Column(
-      children: [
-        // Carousel with level grids
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemCount: totalPages,
-            itemBuilder: (context, pageIndex) {
-              final startIndex = pageIndex * levelsPerPage;
-              final endIndex = math.min(startIndex + levelsPerPage, totalLevels);
-              final pageLevels = GameLevels.levels.sublist(startIndex, endIndex);
-              
-              return _buildLevelGridPage(context, pageLevels, startIndex);
-            },
-          ),
-        ),
-        // Page indicators
-        if (totalPages > 1)
-          _buildPageIndicators(context, totalPages),
-      ],
-    );
-  }
-  
-  Widget _buildLevelGridPage(BuildContext context, List<Level> pageLevels, int startIndex) {
-    final gridSpacing = ResponsiveHelper.getSpacing(context, 8);
-    const crossAxisCount = 3; // Fixed 3 columns
-    
-    return Padding(
-      padding: EdgeInsets.only(
-        left: ResponsiveHelper.getSpacing(context, 8),
-        right: ResponsiveHelper.getSpacing(context, 8),
-       
-      ),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: gridSpacing,
-          mainAxisSpacing: gridSpacing,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: pageLevels.length,
-        itemBuilder: (context, index) {
-          final globalIndex = startIndex + index;
-          
-          // Safety check: ensure index is valid
-          if (globalIndex < 0 || globalIndex >= GameLevels.levels.length) {
-            return const SizedBox.shrink();
-          }
-          
-          final level = pageLevels[index];
-          
-          // Safety check: ensure arrays are properly sized
-          final isUnlocked = (globalIndex < _levelUnlocked.length) ? _levelUnlocked[globalIndex] : false;
-          final isCompleted = (globalIndex < _levelCompleted.length) ? _levelCompleted[globalIndex] : false;
-          
-          return _buildLevelCard(context, level, isUnlocked, isCompleted);
-        },
-      ),
-    );
-  }
-  
-  Widget _buildPageIndicators(BuildContext context, int totalPages) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: ResponsiveHelper.getSpacing(context, 68),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(
-          totalPages,
-          (index) => GestureDetector(
-            onTap: () {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-            child: Container(
-              width: ResponsiveHelper.getSpacing(context, 8),
-              height: ResponsiveHelper.getSpacing(context, 8),
-              margin: EdgeInsets.symmetric(
-                horizontal: ResponsiveHelper.getSpacing(context, 4),
-              ),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _currentPage == index
-                    ? AppColors.ballColors['blue'] ?? AppColors.primary
-                    : AppColors.textMuted.withOpacity(0.3),
-                boxShadow: _currentPage == index
-                    ? [
-                        BoxShadow(
-                          color: (AppColors.ballColors['blue'] ?? AppColors.primary).withOpacity(0.5),
-                          blurRadius: ResponsiveHelper.getSpacing(context, 4),
-                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                        ),
-                      ]
-                    : null,
-              ),
+    int currentIndex = 0;
+    for (int i = 0; i < totalLevels && i < _levelCompleted.length; i++) {
+      if (!_levelCompleted[i]) {
+        currentIndex = i;
+        break;
+      }
+      currentIndex = i;
+    }
+    if (currentIndex >= totalLevels) currentIndex = 0;
+    final level = GameLevels.levels[currentIndex];
+    final isUnlocked = (currentIndex < _levelUnlocked.length) ? _levelUnlocked[currentIndex] : true;
+    final isCompleted = (currentIndex < _levelCompleted.length) ? _levelCompleted[currentIndex] : false;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+              maxWidth: constraints.maxWidth,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Transform.translate(
+                  offset: Offset(0, -ResponsiveHelper.getSpacing(context, 28)),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: ResponsiveHelper.getSpacing(context, 200),
+                      maxHeight: ResponsiveHelper.getSpacing(context, 200),
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: 1.0,
+                      child: _buildLevelCard(context, level, isUnlocked, isCompleted),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildLevelCard(BuildContext context, Level level, bool isUnlocked, bool isCompleted) {
-    // Get colors from game board ballColors
-    Color? borderColor;
-    Color? shadowColor;
-    
-    if (isCompleted) {
-      // Completed level - use yellow/orange gradient
-      borderColor = AppColors.ballColors['yellow'];
-      shadowColor = AppColors.ballColors['yellow']?.withOpacity(0.5);
-    } else if (isUnlocked) {
-      // Unlocked level - use blue/indigo gradient (same as lock icon background) - no opacity
-      borderColor = AppColors.ballColors['blue'];
-      shadowColor = AppColors.ballColors['blue']?.withOpacity(0.5);
-    } else {
-      // Locked level - use same color as solved level (green/teal)
-      borderColor = AppColors.ballColors['green'];
-      shadowColor = AppColors.ballColors['green']?.withOpacity(0.5);
-    }
-    
+    const topColor = Color(0xFF33EBFF);
+    const bottomColor = Color(0xFF00B8D4);
+    const glowColor = Color(0xFF00E5FF);
+
     return GestureDetector(
-              onTap: isUnlocked ? () {
-                _onLevelSelected(level.level);
-              } : null,
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                gradient: isUnlocked
-                    ? LinearGradient(
-                        colors: isCompleted
-                              ? [
-                                  AppColors.ballColors['yellow']!,
-                                  AppColors.ballColors['orange']!,
-                                ]
-                              : [
-                                  AppColors.ballColors['blue']!,
-                                  AppColors.ballColors['indigo']!,
-                                ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : LinearGradient(
-                        colors: [
-                          AppColors.ballColors['green']!,
-                          AppColors.ballColors['teal']!,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                border: Border.all(
-                  color: borderColor ?? AppColors.border,
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: shadowColor ?? AppColors.border.withOpacity(0.5),
-                    blurRadius: isUnlocked ? 12 : 8,
-                    spreadRadius: isUnlocked ? 1 : 0,
-                    offset: const Offset(0, 2),
+      onTap: isUnlocked ? () => _onLevelSelected(level.level) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [topColor, glowColor, bottomColor],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.4),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: glowColor.withOpacity(0.6),
+              blurRadius: 24,
+              spreadRadius: 0,
+              offset: const Offset(0, 0),
+            ),
+            BoxShadow(
+              color: glowColor.withOpacity(0.35),
+              blurRadius: 32,
+              spreadRadius: 4,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Top highlight edge
+            Positioned(
+              top: 0,
+              left: 12,
+              right: 12,
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.6),
+                      Colors.white.withOpacity(0.0),
+                    ],
                   ),
-                ],
+                ),
               ),
-              child: Stack(
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    // Main content
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                          if (isCompleted) ...[
-                            // Completed level - using game board colors
-                            // Level number
-                            Text(
-                              '${level.level}',
-                              style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 18),
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.8),
-                                    offset: const Offset(2, 2),
-                                    blurRadius: 6,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
-                            Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 4)),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.ballColors['yellow']!.withOpacity(0.5),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.check_circle,
-                                color: AppColors.ballColors['orange']!,
-                                size: ResponsiveHelper.getIconSize(context, 24),
-                              ),
-                            ),
-                          ] else if (isUnlocked) ...[
-                            // Unlocked level - using blue/indigo gradient
-                            Container(
-                              padding: EdgeInsets.all(ResponsiveHelper.getSpacing(context, 10)),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.ballColors['cyan']!,
-                                    AppColors.ballColors['blue']!,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.ballColors['blue']!.withOpacity(0.6),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                '${level.level}',
-                                style: TextStyle(
-                                  fontSize: ResponsiveHelper.getFontSize(context, 20),
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.8),
-                                      offset: const Offset(2, 2),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 2)),
-                            Text(
-                              '${level.columns}×${level.rows}',
-                              style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 10),
-                                color: AppColors.textAccent,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.0,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.6),
-                                    offset: const Offset(1, 1),
-                                    blurRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ] else ...[
-                            // Locked level - solid orange background
-                            // Level number - white for visibility
-                            Text(
-                              '${level.level}',
-                              style: TextStyle(
-                                fontSize: ResponsiveHelper.getFontSize(context, 22),
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.8),
-                                    offset: const Offset(2, 2),
-                                    blurRadius: 6,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 6)),
-                            // Lock icon - white for visibility, no shadow
-                            Icon(
-                              Icons.lock,
-                              color: Colors.white,
-                              size: ResponsiveHelper.getIconSize(context, 26),
-                            ),
-                        ],
-                      ],
+                  Text(
+                    'Level ${level.level}',
+                    style: GoogleFonts.rajdhani(
+                      fontSize: ResponsiveHelper.getFontSize(context, 30),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
                     ),
                   ),
-                  
-                    // Difficulty indicator - no animation
-                    if (isUnlocked && !isCompleted)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _getDifficultyColor(level.level),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
+                  if (isCompleted) ...[
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 6)),
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.black,
+                      size: ResponsiveHelper.getIconSize(context, 28),
+                    ),
+                  ] else if (!isUnlocked) ...[
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 6)),
+                    Icon(
+                      Icons.lock,
+                      color: Colors.black,
+                      size: ResponsiveHelper.getIconSize(context, 26),
+                    ),
                   ],
+                ],
+              ),
+            ),
+            if (isUnlocked && !isCompleted)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: _getDifficultyColor(level.level),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            );
+          ],
+        ),
+      ),
+    );
   }
 
   Color _getDifficultyColor(int level) {
@@ -737,17 +552,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image - fills entire screen including safe areas
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/img/bg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          const BackgroundImage(),
           // Content with SafeArea
           SafeArea(
             child: Stack(
@@ -756,14 +561,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header Section with logo - with spacing
-                    SizedBox(height: ResponsiveHelper.getSpacing(context, 40)),
+                    // Header Section with logo – more top space, slightly larger logo
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 76)),
                     Container(
                       margin: EdgeInsets.zero,
                       padding: EdgeInsets.zero,
                       child: Image.asset(
                         'assets/img/logo.png',
-                        width: ResponsiveHelper.getSpacing(context, 200),
+                        width: ResponsiveHelper.getSpacing(context, 268),
                       ),
                     ),
                     SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
@@ -777,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     
-                    SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
+                    SizedBox(height: ResponsiveHelper.getSpacing(context, 8)),
                     
                     // Explore More Games Heading (centered)
                     Padding(
@@ -820,179 +625,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     
                     SizedBox(height: ResponsiveHelper.getSpacing(context, 10)),
                     
-                    // Mobile Games and Web Games buttons in same row (not full width)
+                    // Mobile Games and Web Games buttons
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                       child: Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Mobile Games button - using game board colors
-                            Expanded(
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 120),
-                                ),
-                                height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                    ResponsiveHelper.getBorderRadius(context, 24),
-                                  ),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.ballColors['orange']!,
-                                      AppColors.ballColors['red']!,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  border: Border.all(
-                                    color: AppColors.ballColors['orange']!.withOpacity(0.8),
-                                    width: ResponsiveHelper.getSpacing(context, 1.5),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.ballColors['orange']!.withOpacity(0.6),
-                                      blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                      spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                      offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: _navigateToMobileGames,
-                                    borderRadius: BorderRadius.circular(
-                                      ResponsiveHelper.getBorderRadius(context, 24),
-                                    ),
-                                    child: Container(
-                                      height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: ResponsiveHelper.getSpacing(context, 10),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.smartphone,
-                                            size: ResponsiveHelper.getIconSize(context, 16),
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                          Flexible(
-                                            child: Text(
-                                              'Mobile Games',
-                                              style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 12.8),
-                                                fontWeight: FontWeight.w900,
-                                                color: Colors.white,
-                                                letterSpacing: 1.0,
-                                                shadows: [
-                                                  Shadow(
-                                                    color: Colors.black.withOpacity(0.6),
-                                                    offset: const Offset(1, 1),
-                                                    blurRadius: 2,
-                                                  ),
-                                                ],
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            GradientActionButton(
+                              icon: Icons.smartphone,
+                              label: 'Mobile Games',
+                              gradientColors: [
+                                AppColors.ballColors['orange']!,
+                                AppColors.ballColors['red']!,
+                              ],
+                              onTap: _navigateToMobileGames,
                             ),
-                            
                             SizedBox(width: ResponsiveHelper.getSpacing(context, 12)),
-                            
-                            // Web Games button - using game board colors
-                            Expanded(
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: ResponsiveHelper.getSpacing(context, 120),
-                                ),
-                                height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                    ResponsiveHelper.getBorderRadius(context, 24),
-                                  ),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.ballColors['blue']!,
-                                      AppColors.ballColors['cyan']!,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  border: Border.all(
-                                    color: AppColors.ballColors['blue']!.withOpacity(0.8),
-                                    width: ResponsiveHelper.getSpacing(context, 1.5),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.ballColors['blue']!.withOpacity(0.6),
-                                      blurRadius: ResponsiveHelper.getSpacing(context, 12),
-                                      spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                                      offset: Offset(0, ResponsiveHelper.getSpacing(context, 4)),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: _navigateToWebGames,
-                                    borderRadius: BorderRadius.circular(
-                                      ResponsiveHelper.getBorderRadius(context, 24),
-                                    ),
-                                    child: Container(
-                                      height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: ResponsiveHelper.getSpacing(context, 10),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.laptop,
-                                            size: ResponsiveHelper.getIconSize(context, 16),
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(width: ResponsiveHelper.getSpacing(context, 8)),
-                                          Flexible(
-                                            child: Text(
-                                              'Web Games',
-                                              style: TextStyle(
-                                                fontSize: ResponsiveHelper.getFontSize(context, 12.8),
-                                                fontWeight: FontWeight.w900,
-                                                color: Colors.white,
-                                                letterSpacing: 1.0,
-                                                shadows: [
-                                                  Shadow(
-                                                    color: Colors.black.withOpacity(0.6),
-                                                    offset: const Offset(1, 1),
-                                                    blurRadius: 2,
-                                                  ),
-                                                ],
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            GradientActionButton(
+                              icon: Icons.laptop,
+                              label: 'Web Games',
+                              gradientColors: [
+                                AppColors.ballColors['blue']!,
+                                AppColors.ballColors['cyan']!,
+                              ],
+                              onTap: _navigateToWebGames,
                             ),
                           ],
                         ),
@@ -1010,110 +667,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
                 
-                // How to Play button in top-left corner - using game board colors
                 Positioned(
                   top: ResponsiveHelper.getSpacing(context, 2),
                   left: horizontalPadding,
-                  child: Container(
-                    width: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                    height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveHelper.getBorderRadius(context, 12),
-                      ),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.ballColors['purple']!,
-                          AppColors.ballColors['indigo']!,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: AppColors.ballColors['purple']!.withOpacity(0.8),
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.ballColors['purple']!.withOpacity(0.6),
-                          blurRadius: ResponsiveHelper.getSpacing(context, 8),
-                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 2)),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _showHowToPlay,
-                        borderRadius: BorderRadius.circular(
-                          ResponsiveHelper.getBorderRadius(context, 12),
-                        ),
-                        child: Icon(
-                          Icons.help_outline,
-                          color: Colors.white,
-                          size: ResponsiveHelper.getIconSize(context, 19.2),
-                        ),
-                      ),
-                    ),
+                  child: AccentIconButton(
+                    icon: Icons.help_outline,
+                    onTap: _showHowToPlay,
                   ),
                 ),
-                
-                // Sound toggle button in top-right corner - using game board colors
                 Positioned(
                   top: ResponsiveHelper.getSpacing(context, 2),
                   right: horizontalPadding,
-                  child: Container(
-                    width: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                    height: ResponsiveHelper.getButtonHeight(context) * 0.8,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveHelper.getBorderRadius(context, 12),
-                      ),
-                      gradient: LinearGradient(
-                        colors: _isSoundEnabled
-                            ? [
-                                AppColors.primary,
-                                AppColors.primaryHover,
-                              ]
-                            : [
-                                AppColors.bgCard,
-                                AppColors.bgCardHover,
-                              ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: _isSoundEnabled
-                            ? AppColors.primary.withOpacity(0.8)
-                            : AppColors.textMuted,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _isSoundEnabled
-                              ? AppColors.primary.withOpacity(0.6)
-                              : Colors.black.withOpacity(0.3),
-                          blurRadius: ResponsiveHelper.getSpacing(context, 8),
-                          spreadRadius: ResponsiveHelper.getSpacing(context, 1),
-                          offset: Offset(0, ResponsiveHelper.getSpacing(context, 2)),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _toggleSound,
-                        borderRadius: BorderRadius.circular(
-                          ResponsiveHelper.getBorderRadius(context, 12),
-                        ),
-                        child: Icon(
-                          _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
-                          color: Colors.white,
-                          size: ResponsiveHelper.getIconSize(context, 19.2),
-                        ),
-                      ),
-                    ),
+                  child: AccentIconButton(
+                    icon: _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                    onTap: _toggleSound,
                   ),
                 ),
               ],
@@ -1133,46 +700,4 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-}
-
-/// Custom painter for level card pattern animation
-class LevelCardPatternPainter extends CustomPainter {
-  final double animation;
-  final Color color;
-
-  LevelCardPatternPainter({
-    required this.animation,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    // Draw animated geometric patterns
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 3;
-    
-    // Rotating hexagon pattern
-    for (int i = 0; i < 6; i++) {
-      final angle = (i * math.pi / 3) + (animation * 2 * math.pi);
-      final x = center.dx + math.cos(angle) * radius * 0.7;
-      final y = center.dy + math.sin(angle) * radius * 0.7;
-      
-      canvas.drawCircle(
-        Offset(x, y),
-        3 + math.sin(animation * 2 * math.pi + i) * 2,
-        paint,
-      );
-    }
-    
-    // Pulsing center circle
-    final centerRadius = 8 + math.sin(animation * 4 * math.pi) * 4;
-    canvas.drawCircle(center, centerRadius, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

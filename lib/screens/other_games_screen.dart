@@ -8,7 +8,6 @@ import '../services/sound_service.dart';
 import '../services/fgtp_games_service.dart' show FgtpGamesService, NoInternetException;
 import '../services/connectivity_service.dart';
 import '../constants/app_colors.dart';
-import '../utils/responsive_utils.dart';
 import '../utils/responsive_helper.dart';
 import '../constants/game_constants.dart';
 
@@ -232,7 +231,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     final buttonPadding = ResponsiveHelper.getSpacing(context, 8);
     final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
     final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
-    final titleStyle = ResponsiveUtils.getResponsiveTextStyle(
+    final titleStyle = ResponsiveHelper.getResponsiveTextStyle(
       context,
       baseFontSize: 22,
       fontWeight: FontWeight.bold,
@@ -353,11 +352,11 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
           final crossAxisCount = _getCrossAxisCount(maxWidth);
-          final horizontalSpacing = ResponsiveUtils.getResponsiveSpacing(
+          final horizontalSpacing = ResponsiveHelper.getResponsiveSpacing(
             context,
             16,
           );
-          final verticalSpacing = ResponsiveUtils.getResponsiveSpacing(
+          final verticalSpacing = ResponsiveHelper.getResponsiveSpacing(
             context,
             14,
           );
@@ -370,7 +369,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
             padding: EdgeInsets.only(
               left: 0,
               right: 0,
-              bottom: ResponsiveUtils.getResponsiveSpacing(context, 120),
+              bottom: ResponsiveHelper.getResponsiveSpacing(context, 120),
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -406,7 +405,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'Something went wrong.',
-              style: ResponsiveUtils.getResponsiveTextStyle(
+              style: ResponsiveHelper.getResponsiveTextStyle(
                 context,
                 baseFontSize: 16,
                 color: AppColors.textSecondary,
@@ -434,7 +433,7 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     return Center(
       child: Text(
         'More games coming soon!',
-        style: ResponsiveUtils.getResponsiveTextStyle(
+        style: ResponsiveHelper.getResponsiveTextStyle(
           context,
           baseFontSize: 18,
           color: AppColors.textSecondary,
@@ -452,10 +451,10 @@ class _OtherGamesScreenState extends State<OtherGamesScreen>
     return 2;
   }
   double _calculateCardAspectRatio(BuildContext context, double cardWidth) {
-    final cardPadding = ResponsiveUtils.getResponsiveSpacing(context, 4);
-    final spacing = ResponsiveUtils.getResponsiveSpacing(context, 6);
-    final buttonHeight = ResponsiveUtils.getResponsiveSpacing(context, 36);
-    final textStyle = ResponsiveUtils.getResponsiveTextStyle(
+    final cardPadding = ResponsiveHelper.getResponsiveSpacing(context, 4);
+    final spacing = ResponsiveHelper.getResponsiveSpacing(context, 6);
+    final buttonHeight = ResponsiveHelper.getResponsiveSpacing(context, 36);
+    final textStyle = ResponsiveHelper.getResponsiveTextStyle(
       context,
       baseFontSize: 16,
       fontWeight: FontWeight.w700,
@@ -481,9 +480,9 @@ class _GameCard extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final cardPadding = ResponsiveUtils.getResponsiveSpacing(context, 10);
-    final spacing = ResponsiveUtils.getResponsiveSpacing(context, 6);
-    final buttonHeight = ResponsiveUtils.getResponsiveSpacing(context, 36);
+    final cardPadding = ResponsiveHelper.getResponsiveSpacing(context, 10);
+    final spacing = ResponsiveHelper.getResponsiveSpacing(context, 6);
+    final buttonHeight = ResponsiveHelper.getResponsiveSpacing(context, 36);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(ResponsiveHelper.getBorderRadius(context, 24)),
@@ -523,7 +522,7 @@ class _GameCard extends StatelessWidget {
               aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(
-                  ResponsiveUtils.getResponsiveBorderRadius(
+                  ResponsiveHelper.getResponsiveBorderRadius(
                     context,
                     14,
                   ),
@@ -565,7 +564,7 @@ class _GameCard extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: ResponsiveUtils.getResponsiveTextStyle(
+              style: ResponsiveHelper.getResponsiveTextStyle(
                 context,
                 baseFontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -583,7 +582,7 @@ class _GameCard extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.getResponsiveBorderRadius(context, 10),
+                      ResponsiveHelper.getResponsiveBorderRadius(context, 10),
                     ),
                   ),
                 ).copyWith(
@@ -602,9 +601,9 @@ class _GameCard extends StatelessWidget {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.getResponsiveBorderRadius(context, 10),
+                      ResponsiveHelper.getResponsiveBorderRadius(context, 10),
                     ),
-                    boxShadow: ResponsiveUtils.getResponsiveBoxShadow(
+                    boxShadow: ResponsiveHelper.getResponsiveBoxShadow(
                       context,
                       color: AppColors.accent.withOpacity(0.25),
                       baseBlurRadius: 12,
@@ -616,7 +615,7 @@ class _GameCard extends StatelessWidget {
                     alignment: Alignment.center,
                     padding: EdgeInsets.symmetric(
                       horizontal:
-                          ResponsiveUtils.getResponsiveSpacing(context, 12),
+                          ResponsiveHelper.getResponsiveSpacing(context, 12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -624,11 +623,11 @@ class _GameCard extends StatelessWidget {
                       children: [
                         const Icon(Icons.play_arrow, size: 20, color: AppColors.white),
                         SizedBox(
-                          width: ResponsiveUtils.getResponsiveSpacing(context, 6),
+                          width: ResponsiveHelper.getResponsiveSpacing(context, 6),
                         ),
                         Text(
                           'Play Now',
-                          style: ResponsiveUtils.getResponsiveTextStyle(
+                          style: ResponsiveHelper.getResponsiveTextStyle(
                             context,
                             baseFontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -662,7 +661,7 @@ class _PlaceholderArtwork extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: ResponsiveUtils.getResponsiveTextStyle(
+          style: ResponsiveHelper.getResponsiveTextStyle(
             context,
             baseFontSize: 14,
             fontWeight: FontWeight.bold,

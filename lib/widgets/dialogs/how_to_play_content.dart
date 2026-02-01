@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import '../../constants/app_colors.dart';
-import '../../constants/game_constants.dart';
 
 /// How to play content widget for the start dialog with enhanced styling
 class HowToPlayContent extends StatefulWidget {
@@ -14,11 +12,9 @@ class HowToPlayContent extends StatefulWidget {
 class _HowToPlayContentState extends State<HowToPlayContent> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
-  late AnimationController _pulseController;
   
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -30,7 +26,6 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
   void dispose() {
     _fadeController.dispose();
     _slideController.dispose();
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -44,11 +39,6 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
@@ -58,10 +48,6 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
-    
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
 
     _fadeController.forward();
     _slideController.forward();
@@ -83,8 +69,8 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
                 // Enhanced rule cards with staggered animations
                 _buildAnimatedRuleCard(
                   icon: Icons.view_column,
-                  title: "Arrange Colors",
-                  description: "Arrange balls so each column has the same color",
+                  title: "Match Tiles",
+                  description: "Arrange tiles so each column has the same type (e.g. same treat)",
                   color: AppColors.neonBlue,
                   delay: 0,
                 ),
@@ -93,8 +79,8 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
                 
                 _buildAnimatedRuleCard(
                   icon: Icons.touch_app,
-                  title: "Move Balls",
-                  description: "Click balls adjacent to the empty space to move them",
+                  title: "Slide Tiles",
+                  description: "Tap a tile next to the empty cell to slide it into the empty space",
                   color: AppColors.neonGreen,
                   delay: 200,
                 ),
@@ -104,7 +90,7 @@ class _HowToPlayContentState extends State<HowToPlayContent> with TickerProvider
                 _buildAnimatedRuleCard(
                   icon: Icons.trending_up,
                   title: "Level Up",
-                  description: "Grid size and colors increase with each level",
+                  description: "Grid size and tile types increase with each level",
                   color: AppColors.neonPink,
                   delay: 400,
                 ),

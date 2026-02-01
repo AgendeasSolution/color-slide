@@ -51,7 +51,7 @@ class GameLogic {
     bool success = _backtrackWithSmartPlacement(board, config, colorCounts, positions, 0, emptyIndex);
     
     if (!success) {
-      _generateFallbackBoard(board, config, emptyIndex);
+      _generateFallbackBoard(board, config, colorCounts, emptyIndex);
     }
   }
 
@@ -118,7 +118,8 @@ class GameLogic {
     return false; // No valid color found for this position
   }
 
-  /// Gets available colors for a position that don't conflict with neighbors
+  /// Gets available colors for a position that don't conflict with neighbors.
+  /// Prefers colors that are farthest from their siblings so same emoji is distributed wildly.
   static List<String> _getAvailableColorsForPosition(
     List<String?> board,
     Level config,
@@ -134,49 +135,133 @@ class GameLogic {
       }
     }
     
-    // Shuffle for randomness
-    availableColors.shuffle(Random());
-    return availableColors;
+    // Prefer colors that spread same emoji far apart (max distance to nearest same color)
+    final withDistance = availableColors.map((c) => (
+      c,
+      _minDistanceToNearestSameColor(board, config.columns, config.rows, index, c, emptyIndex),
+    )).toList();
+    withDistance.sort((a, b) => b.$2.compareTo(a.$2)); // larger distance first
+    final maxDist = withDistance.isNotEmpty ? withDistance.first.$2 : 0;
+    final best = withDistance.where((e) => e.$2 == maxDist).map((e) => e.$1).toList();
+    best.shuffle(Random());
+    final rest = withDistance.where((e) => e.$2 != maxDist).map((e) => e.$1).toList();
+    rest.shuffle(Random());
+    return [...best, ...rest];
   }
 
-  /// Fallback method that guarantees a solution
-  static void _generateFallbackBoard(List<String?> board, Level config, int emptyIndex) {
-    final int columns = config.columns;
-    final int rows = config.rows;
-    
-    // Use a simple alternating pattern that minimizes adjacencies
-    List<String> colors = List.from(config.colors);
-    int colorIndex = 0;
+  /// Minimum Chebyshev distance (max of row diff, col diff) from [index] to any cell with [color].
+  /// Used to spread same emoji as far apart as possible.
+  static int _minDistanceToNearestSameColor(
+    List<String?> board,
+    int columns,
+    int rows,
+    int index,
+    String color,
+    int emptyIndex,
+  ) {
+    final row0 = index ~/ columns;
+    final col0 = index % columns;
+    int minDist = columns + rows; // large if no same color yet
     
     for (int i = 0; i < board.length; i++) {
-      if (i != emptyIndex) {
-        // Use a checkerboard-like pattern
-        int row = i ~/ columns;
-        int col = i % columns;
-        
-        // Alternate colors in a pattern that minimizes adjacencies
-        if ((row + col) % 2 == 0) {
-          board[i] = colors[0];
-        } else {
-          board[i] = colors[1 % colors.length];
-        }
-      }
+      if (i == emptyIndex || board[i] != color) continue;
+      final r = i ~/ columns;
+      final c = i % columns;
+      final dist = (row0 - r).abs() > (col0 - c).abs() ? (row0 - r).abs() : (col0 - c).abs();
+      if (dist < minDist) minDist = dist;
     }
-    
-    // Try to place remaining colors while avoiding conflicts
-    for (int colorIdx = 2; colorIdx < colors.length; colorIdx++) {
-      String color = colors[colorIdx];
-      
-      // Find positions where we can place this color
+    return minDist;
+  }
+
+  /// Fallback method: never place same emoji adjacent. Retry with new position order until valid.
+  static void _generateFallbackBoard(
+    List<String?> board,
+    Level config,
+    Map<String, int> colorCounts,
+    int emptyIndex,
+  ) {
+    const int maxTries = 50;
+    for (int tryCount = 0; tryCount < maxTries; tryCount++) {
+      // Clear all cells (keep empty)
       for (int i = 0; i < board.length; i++) {
-        if (i != emptyIndex && board[i] == colors[0]) {
-          // Check if we can place this color here
-          if (_isColorValidAtPosition(board, config, i, color, emptyIndex)) {
-            board[i] = color;
-            break;
+        board[i] = null;
+      }
+      Map<String, int> remaining = Map.from(colorCounts);
+      List<int> positions = [];
+      for (int i = 0; i < board.length; i++) {
+        if (i != emptyIndex) positions.add(i);
+      }
+      positions.shuffle(Random());
+      bool allPlaced = true;
+      for (int pos in positions) {
+        List<String> available = [];
+        for (String color in config.colors) {
+          if ((remaining[color] ?? 0) > 0 &&
+              _isColorValidAtPosition(board, config, pos, color, emptyIndex)) {
+            available.add(color);
           }
         }
+        if (available.isEmpty) {
+          allPlaced = false;
+          break; // retry with new shuffle
+        }
+        // Prefer color that spreads same emoji far (same as main backtrack)
+        available.sort((a, b) {
+          final da = _minDistanceToNearestSameColor(board, config.columns, config.rows, pos, a, emptyIndex);
+          final db = _minDistanceToNearestSameColor(board, config.columns, config.rows, pos, b, emptyIndex);
+          return db.compareTo(da);
+        });
+        final color = available[Random().nextInt(available.length)];
+        board[pos] = color;
+        remaining[color] = remaining[color]! - 1;
       }
+      if (allPlaced) return;
+    }
+    // Last resort: fill using checkerboard-style order so same color never adjacent
+    _generateFallbackCheckerboard(board, config, colorCounts, emptyIndex);
+  }
+
+  /// Last-resort fill: try diagonal order so same color tends to spread; retry until no adjacent same.
+  static void _generateFallbackCheckerboard(
+    List<String?> board,
+    Level config,
+    Map<String, int> colorCounts,
+    int emptyIndex,
+  ) {
+    final int columns = config.columns;
+    for (int attempt = 0; attempt < 30; attempt++) {
+      for (int i = 0; i < board.length; i++) {
+        board[i] = null;
+      }
+      List<int> positions = [];
+      for (int i = 0; i < board.length; i++) {
+        if (i != emptyIndex) positions.add(i);
+      }
+      positions.sort((a, b) {
+        final ra = a ~/ columns, ca = a % columns;
+        final rb = b ~/ columns, cb = b % columns;
+        final sumA = ra + ca, sumB = rb + cb;
+        if (sumA != sumB) return sumA.compareTo(sumB);
+        return ra.compareTo(rb);
+      });
+      if (attempt > 0) positions.shuffle(Random());
+      Map<String, int> remaining = Map.from(colorCounts);
+      bool ok = true;
+      for (int pos in positions) {
+        List<String> available = [];
+        for (String color in config.colors) {
+          if ((remaining[color] ?? 0) > 0 &&
+              _isColorValidAtPosition(board, config, pos, color, emptyIndex)) {
+            available.add(color);
+          }
+        }
+        if (available.isEmpty) { ok = false; break; }
+        available.shuffle(Random());
+        final color = available.first;
+        board[pos] = color;
+        remaining[color] = remaining[color]! - 1;
+      }
+      if (ok) return;
     }
   }
 
@@ -233,33 +318,21 @@ class GameLogic {
     int attempts = 0;
     const int maxAttempts = 1000; // Prevent infinite loops
 
-    for (int i = 0; i < config.shuffleMoves && attempts < maxAttempts; i++) {
+    int validMovesDone = 0;
+    while (validMovesDone < config.shuffleMoves && attempts < maxAttempts) {
       final neighbors = _getValidNeighbors(currentEmptyIndex, config.columns, config.rows);
-      final randomIndex = neighbors[Random().nextInt(neighbors.length)];
-      
-      // Check if this move would create adjacent same colors
-      if (_isValidMove(shuffledBoard, randomIndex, currentEmptyIndex, config)) {
-        _swapCells(shuffledBoard, randomIndex, currentEmptyIndex);
-        currentEmptyIndex = randomIndex;
-      } else {
-        // Try to find a valid move
-        bool foundValidMove = false;
-        for (int neighbor in neighbors) {
-          if (_isValidMove(shuffledBoard, neighbor, currentEmptyIndex, config)) {
-            _swapCells(shuffledBoard, neighbor, currentEmptyIndex);
-            currentEmptyIndex = neighbor;
-            foundValidMove = true;
-            break;
-          }
-        }
-        
-        if (!foundValidMove) {
-          // If no valid move found, just make a random move
-          _swapCells(shuffledBoard, randomIndex, currentEmptyIndex);
-          currentEmptyIndex = randomIndex;
+      final shuffledNeighbors = List<int>.from(neighbors)..shuffle(Random());
+      bool moved = false;
+      for (int neighbor in shuffledNeighbors) {
+        if (_isValidMove(shuffledBoard, neighbor, currentEmptyIndex, config)) {
+          _swapCells(shuffledBoard, neighbor, currentEmptyIndex);
+          currentEmptyIndex = neighbor;
+          moved = true;
+          validMovesDone++;
+          break;
         }
       }
-      
+      if (!moved) break; // no valid move exists – stop to keep board valid
       attempts++;
     }
 
@@ -352,38 +425,29 @@ class GameLogic {
   /// Validates that no two same-colored balls are adjacent in the board
   /// Returns true if the board is valid (no adjacent same colors), false otherwise
   static bool validateBoardDistribution(List<String?> boardState, int columns, int rows) {
-    List<String> violations = [];
-    
     for (int i = 0; i < boardState.length; i++) {
       if (boardState[i] == null) continue;
       
       final int row = i ~/ columns;
       final int col = i % columns;
       
-      // Check all 8 directions (horizontal, vertical, and diagonal)
       for (int dr = -1; dr <= 1; dr++) {
         for (int dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue; // Skip current cell
+          if (dr == 0 && dc == 0) continue;
           
           final int newRow = row + dr;
           final int newCol = col + dc;
           
-          // Check bounds
           if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
             final int neighborIndex = newRow * columns + newCol;
-            
-            // Skip empty cells
-            if (boardState[neighborIndex] == null) continue;
-            
-            // Check if neighbor has the same color
-            if (boardState[i] == boardState[neighborIndex]) {
-              violations.add('${boardState[i]} at ($row,$col) adjacent to ${boardState[neighborIndex]} at ($newRow,$newCol)');
+            if (boardState[neighborIndex] != null &&
+                boardState[i] == boardState[neighborIndex]) {
+              return false;
             }
           }
         }
       }
     }
-    
-    return violations.isEmpty;
+    return true;
   }
 }

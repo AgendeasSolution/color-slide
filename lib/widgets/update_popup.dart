@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
-import '../constants/game_constants.dart';
 import '../utils/responsive_helper.dart';
 import '../services/sound_service.dart';
 import '../services/update_service.dart';

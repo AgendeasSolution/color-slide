@@ -8,10 +8,10 @@ import '../utils/responsive_helper.dart';
 import '../widgets/common/game_dialog.dart';
 import '../widgets/common/dialog_button.dart';
 import '../widgets/common/ad_banner.dart';
+import '../widgets/common/background_image.dart';
 import '../widgets/game/game_header.dart';
 import '../widgets/game/color_indicators.dart';
 import '../widgets/game/game_board.dart';
-import '../widgets/game/elapsed_time_widget.dart';
 import '../widgets/dialogs/game_over_content.dart';
 import '../services/progress_service.dart';
 import '../services/interstitial_ad_service.dart';
@@ -30,16 +30,11 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   // Animation Controllers
-  late AnimationController _shimmerController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
   // Game State
   late GameState _gameState;
-  
-  // Timer (disabled - clock removed)
-  Timer? _gameTimer;
-  int _timerTick = 0; // Force UI updates
 
   @override
   void initState() {
@@ -67,18 +62,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _gameTimer?.cancel();
-    _shimmerController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
   void _initializeAnimations() {
-    _shimmerController = AnimationController(
-      vsync: this,
-      duration: GameConstants.shimmerAnimation,
-    )..repeat();
-    
     _pulseController = AnimationController(
       duration: GameConstants.pulseAnimation,
       vsync: this,
@@ -90,251 +78,76 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _initializeGameState() {
-    try {
-      final selectedLevel = widget.selectedLevel ?? 1;
-      // Validate level is within bounds
-      if (selectedLevel < 1 || selectedLevel > GameLevels.levels.length) {
-        final levelIndex = 0;
-        final currentConfig = GameLevels.levels[levelIndex];
-        _gameState = GameState(
-          currentLevel: 1,
-          currentConfig: currentConfig,
-          boardState: [],
-          initialBoardState: [],
-          emptyCellIndex: -1,
-          initialEmptyCellIndex: -1,
-          gameWon: false,
-          gameOver: false,
-          moves: 0,
-          timeUp: false,
-        );
-        return;
-      }
-      
-      final levelIndex = selectedLevel - 1;
-      if (levelIndex < 0 || levelIndex >= GameLevels.levels.length) {
-        return;
-      }
-      
-      final currentConfig = GameLevels.levels[levelIndex];
-      _gameState = GameState(
-        currentLevel: selectedLevel,
-        currentConfig: currentConfig,
-        boardState: [],
-        initialBoardState: [],
-        emptyCellIndex: -1,
-        initialEmptyCellIndex: -1,
-        gameWon: false,
-        gameOver: false,
-        moves: 0,
-        timeUp: false,
-      );
-    } catch (e) {
-      // Default to level 1 on error
-      if (GameLevels.levels.isNotEmpty) {
-        try {
-          final currentConfig = GameLevels.levels[0];
-          _gameState = GameState(
-            currentLevel: 1,
-            currentConfig: currentConfig,
-            boardState: [],
-            initialBoardState: [],
-            emptyCellIndex: -1,
-            initialEmptyCellIndex: -1,
-            gameWon: false,
-            gameOver: false,
-            moves: 0,
-            timeUp: false,
-          );
-        } catch (e2) {
-          // Game state will remain uninitialized - caller should handle
-        }
-      }
-    }
+    final selectedLevel = (widget.selectedLevel ?? 1).clamp(1, GameLevels.levels.length);
+    final levelIndex = selectedLevel - 1;
+    final currentConfig = GameLevels.levels[levelIndex];
+    _gameState = GameState(
+      currentLevel: selectedLevel,
+      currentConfig: currentConfig,
+      boardState: [],
+      initialBoardState: [],
+      emptyCellIndex: -1,
+      initialEmptyCellIndex: -1,
+      gameWon: false,
+      gameOver: false,
+      moves: 0,
+    );
   }
-
-  //============================================================================
-  // Timer Management
-  //============================================================================
-  void _startGameTimer() {
-    _gameTimer?.cancel();
-    _timerTick = 0; // Reset tick counter
-    
-    // Update timer every second for elapsed time display
-    _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted && _gameState.startTime != null && !_gameState.timerPaused) {
-        setState(() {
-          _timerTick++;
-        });
-      }
-    });
-  }
-
-  void _stopGameTimer() {
-    _gameTimer?.cancel();
-    _gameTimer = null;
-  }
-
-  // _handleTimeUp method removed - clock removed from game
 
   //============================================================================
   // Game Core Logic
   //============================================================================
   void _startNewGame() {
-    try {
-      // Validate level bounds before accessing
-      final currentLevel = _gameState.currentLevel;
-      if (currentLevel < 1 || currentLevel > GameLevels.levels.length) {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-        return;
-      }
-      
-      final levelIndex = currentLevel - 1;
-      if (levelIndex < 0 || levelIndex >= GameLevels.levels.length) {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-        return;
-      }
-      
-        setState(() {
-          final currentConfig = GameLevels.levels[levelIndex];
-          final solvedBoard = GameLogic.createSolvedBoard(currentConfig);
-        
-          final shuffleResult = GameLogic.shuffleBoard(
-            solvedBoard,
-            solvedBoard.length - 1,
-            currentConfig,
-          );
-          
-          // Validate the shuffled board
-          final bool isShuffledValid = GameLogic.validateBoardDistribution(
-            shuffleResult['boardState'], 
-            currentConfig.columns,
-            currentConfig.rows,
-          );
-          
-          if (!isShuffledValid) {
-            // Use the original solved board if shuffle created adjacencies
-            _gameState = _gameState.copyWith(
-              currentConfig: currentConfig,
-              boardState: solvedBoard,
-              initialBoardState: List.from(solvedBoard),
-              emptyCellIndex: solvedBoard.length - 1,
-              initialEmptyCellIndex: solvedBoard.length - 1,
-              gameWon: false,
-              gameOver: false,
-              moves: 0,
-              startTime: DateTime.now(),
-              endTime: null,
-              timeUp: false,
-            );
-          } else {
-            _gameState = _gameState.copyWith(
-              currentConfig: currentConfig,
-              boardState: shuffleResult['boardState'],
-              initialBoardState: List.from(shuffleResult['boardState']),
-              emptyCellIndex: shuffleResult['emptyCellIndex'],
-              initialEmptyCellIndex: shuffleResult['emptyCellIndex'],
-              gameWon: false,
-              gameOver: false,
-              moves: 0,
-              startTime: DateTime.now(),
-              endTime: null,
-              timeUp: false,
-            );
-          }
-        });
-        
-        // Start the game timer AFTER setState
-        _startGameTimer();
-      } catch (e) {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      }
+    final levelIndex = _gameState.currentLevel - 1;
+    if (levelIndex < 0 || levelIndex >= GameLevels.levels.length) {
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
+    final currentConfig = GameLevels.levels[levelIndex];
+    final solvedBoard = GameLogic.createSolvedBoard(currentConfig);
+    final shuffleResult = GameLogic.shuffleBoard(
+      solvedBoard,
+      solvedBoard.length - 1,
+      currentConfig,
+    );
+
+    final boardState = GameLogic.validateBoardDistribution(
+      shuffleResult['boardState'],
+      currentConfig.columns,
+      currentConfig.rows,
+    )
+        ? shuffleResult['boardState']
+        : solvedBoard;
+    final emptyIdx = boardState == solvedBoard ? solvedBoard.length - 1 : shuffleResult['emptyCellIndex'];
+
+    if (!mounted) return;
+    setState(() {
+      _gameState = _gameState.copyWith(
+        currentConfig: currentConfig,
+        boardState: boardState,
+        initialBoardState: List.from(boardState),
+        emptyCellIndex: emptyIdx,
+        initialEmptyCellIndex: emptyIdx,
+        gameWon: false,
+        gameOver: false,
+        moves: 0,
+      );
+    });
   }
 
   void _resetToInitialPosition() async {
     if (!mounted) return;
-    
-    // Stop the current timer completely before showing ad
-    _stopGameTimer();
-    
-    // Reset the game state
-    if (mounted) {
-      try {
-        setState(() {
-          _gameState = _gameState.copyWith(
-            boardState: List.from(_gameState.initialBoardState),
-            emptyCellIndex: _gameState.initialEmptyCellIndex,
-            gameWon: false,
-            gameOver: false,
-            moves: 0,
-            startTime: null, // No start time - timer not running
-            endTime: null,
-            timeUp: false,
-            timerPaused: false,
-          );
-          _timerTick = 0;
-        });
-      } catch (e) {
-        // Silently handle reset error
-      }
-    }
-    
-    // Show interstitial ad with 50% probability and callback
-    final adShown = await InterstitialAdService.instance.showAdWithProbability(
-      onAdDismissed: () {
-        _startTimerAfterAd();
-      }
-    );
-    
-    // If ad was NOT shown (skipped due to probability), start timer immediately
-    if (!adShown) {
-      _startTimerAfterAd();
-    }
-  }
-
-  void _startTimerAfterAd() {
-    if (!mounted) return;
-    
-    // Preload next ad for better user experience
-    try {
-      InterstitialAdService.instance.preloadAd();
-    } catch (e) {
-      // Silently handle ad preload error
-    }
-    
-    // Start the timer fresh after ad is finished
-    final freshStartTime = DateTime.now();
-    if (mounted) {
-      try {
-        setState(() {
-          _gameState = _gameState.copyWith(
-            startTime: freshStartTime,
-            timerPaused: false,
-          );
-          _timerTick = 0;
-        });
-      } catch (e) {
-        // Silently handle timer start error
-      }
-    }
-    
-    // Start the timer
-    _startGameTimer();
-    
-    // Force immediate UI update
-    Future.delayed(const Duration(milliseconds: 50), () {
-      if (mounted) {
-        setState(() {
-          _timerTick = 1;
-        });
-      }
+    setState(() {
+      _gameState = _gameState.copyWith(
+        boardState: List.from(_gameState.initialBoardState),
+        emptyCellIndex: _gameState.initialEmptyCellIndex,
+        gameWon: false,
+        gameOver: false,
+        moves: 0,
+      );
     });
+    await InterstitialAdService.instance.showAdWithProbability(onAdDismissed: () {});
   }
 
   void _handleCellTap(int index) {
@@ -347,27 +160,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _moveBall(int fromIndex, int toIndex) {
     if (!mounted) return;
-    
-    try {
-      final moveResult = GameLogic.moveBall(_gameState.boardState, fromIndex, toIndex);
-      
-      if (mounted) {
-        setState(() {
-          _gameState = _gameState.copyWith(
-            boardState: moveResult['boardState'],
-            emptyCellIndex: moveResult['emptyCellIndex'],
-            moves: _gameState.moves + 1,
-          );
-        });
-      }
-
-      // Use a short delay to allow the UI to update before checking for win
-      if (mounted) {
-        Timer(GameConstants.winCheckDelay, _checkWinCondition);
-      }
-    } catch (e) {
-      // Silently handle move error
-    }
+    final moveResult = GameLogic.moveBall(_gameState.boardState, fromIndex, toIndex);
+    setState(() {
+      _gameState = _gameState.copyWith(
+        boardState: moveResult['boardState'],
+        emptyCellIndex: moveResult['emptyCellIndex'],
+        moves: _gameState.moves + 1,
+      );
+    });
+    if (mounted) Timer(GameConstants.winCheckDelay, _checkWinCondition);
   }
 
   void _checkWinCondition() {
@@ -378,97 +179,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _handleWin() async {
     if (!mounted) return;
-    
-    // Stop the timer
-    _stopGameTimer();
-    
-    // Play win sound
-    try {
-      SoundService.instance.playWin();
-    } catch (e) {
-      // Silently handle sound error
-    }
-    
-    if (mounted) {
-      try {
-        setState(() {
-          _gameState = _gameState.copyWith(
-            gameWon: true,
-            gameOver: true,
-            endTime: DateTime.now(),
-          );
-        });
-      } catch (e) {
-        // Silently handle state update error
-      }
-    }
-    
-    // Save level completion progress
-    try {
-      final progressService = ProgressService.instance;
-      await progressService.completeLevel(_gameState.currentLevel);
-    } catch (e) {
-      // Silently handle progress save error
-    }
-    
-    // Notify home screen that a level was completed
-    try {
-      if (widget.onLevelCompleted != null) {
-        widget.onLevelCompleted!();
-      }
-    } catch (e) {
-      // Silently handle callback error
-    }
-    
-    // Show game over dialog
-    if (mounted) {
-      try {
-        _showGameOverDialog();
-      } catch (e) {
-        // Silently handle dialog error
-      }
-    }
+    SoundService.instance.playWin();
+    setState(() {
+      _gameState = _gameState.copyWith(gameWon: true, gameOver: true);
+    });
+    await ProgressService.instance.completeLevel(_gameState.currentLevel);
+    widget.onLevelCompleted?.call();
+    if (mounted) _showGameOverDialog();
   }
 
 
   void _nextLevel() async {
     if (!mounted) return;
-    
-    // Ensure timer is stopped before starting new level
-    _stopGameTimer();
-    
     if (_gameState.currentLevel < GameLevels.levels.length) {
-      if (mounted) {
-        try {
-          setState(() {
-            _gameState = _gameState.copyWith(
-              currentLevel: _gameState.currentLevel + 1,
-              gameWon: false,
-              gameOver: false,
-              moves: 0,
-              startTime: null, // Don't set startTime here, let _startNewGame handle it
-              endTime: null,
-              timeUp: false,
-            );
-          });
-        } catch (e) {
-          // Silently handle state update error
-        }
-      }
-      
-      // Show interstitial ad with 100% probability for next level
+      setState(() {
+        _gameState = _gameState.copyWith(
+          currentLevel: _gameState.currentLevel + 1,
+          gameWon: false,
+          gameOver: false,
+          moves: 0,
+        );
+      });
       final adShown = await InterstitialAdService.instance.showAdAlways(
-        onAdDismissed: () {
-          _startNewGame();
-        }
+        onAdDismissed: _startNewGame,
       );
-      
-      // If ad was not shown (loading error), start game immediately
-      if (!adShown) {
-        _startNewGame();
-      }
+      if (!adShown) _startNewGame();
     } else {
-      // All levels completed, show completion dialog
       _showAllLevelsCompletedDialog();
     }
   }
@@ -478,7 +214,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _exitGame() async {
-    _stopGameTimer(); // Stop timer before showing ad
     
     // Store navigator context before async operation
     final navigator = Navigator.of(context);
@@ -540,6 +275,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           ],
         ],
         showCloseButton: false,
+        compactSpacing: true,
       ),
     );
   }
@@ -565,13 +301,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           ),
         ],
         showCloseButton: false,
+        compactSpacing: true,
       ),
     );
   }
-
-  // _showTimeUpDialog method removed - clock removed from game
-
-
 
   //============================================================================
   // Build Method & Responsive Layout
@@ -585,17 +318,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image - fills entire screen including safe areas
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/img/bg.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+          const BackgroundImage(),
           // Content with SafeArea
           SafeArea(
             child: Column(
@@ -612,18 +335,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           currentLevel: _gameState.currentLevel,
                           onReset: _resetToInitialPosition,
                           onExit: _exitGame,
-                        ),
-                      ),
-                      // Elapsed time display below header
-                      Positioned(
-                        top: ResponsiveHelper.getButtonHeight(context) * 0.8 + ResponsiveHelper.getSpacing(context, 12),
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: ElapsedTimeWidget(
-                            gameState: _gameState,
-                            tick: _timerTick,
-                          ),
                         ),
                       ),
                       // Game board centered independently in the middle of the screen

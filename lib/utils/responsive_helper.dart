@@ -115,7 +115,7 @@ class ResponsiveHelper {
     );
   }
 
-  /// Get responsive spacing (alias for consistency with ResponsiveUtils)
+  /// Get responsive spacing
   static double getResponsiveSpacing(BuildContext context, double baseSpacing) {
     return getSpacing(context, baseSpacing);
   }
@@ -150,7 +150,7 @@ class ResponsiveHelper {
     );
   }
 
-  /// Get responsive border radius (alias for consistency with ResponsiveUtils)
+  /// Get responsive border radius
   static double getResponsiveBorderRadius(BuildContext context, double baseRadius) {
     return getBorderRadius(context, baseRadius);
   }
@@ -188,26 +188,6 @@ class ResponsiveHelper {
     ).toInt();
   }
 
-  /// Get responsive timer widget size
-  static double getTimerIconSize(BuildContext context) {
-    return _getScaleFactor(
-      context,
-      mobile: GameConstants.timerIconSizeMobile,
-      tablet: GameConstants.timerIconSizeTablet,
-      largeTablet: GameConstants.timerIconSizeLargeTablet,
-    );
-  }
-
-  /// Get responsive timer font size
-  static double getTimerFontSize(BuildContext context) {
-    return _getScaleFactor(
-      context,
-      mobile: GameConstants.timerFontSizeMobile,
-      tablet: GameConstants.timerFontSizeTablet,
-      largeTablet: GameConstants.timerFontSizeLargeTablet,
-    );
-  }
-
   /// Get responsive ball padding
   static double getBallPadding(BuildContext context) {
     return _getScaleFactor(
@@ -217,8 +197,6 @@ class ResponsiveHelper {
       largeTablet: GameConstants.ballPaddingLargeTablet,
     );
   }
-
-  // Additional utility methods from ResponsiveUtils
 
   /// Get responsive text style
   static TextStyle getResponsiveTextStyle(

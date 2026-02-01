@@ -20,7 +20,7 @@ class SoundService {
 
   // Cache for audio sources to avoid repeated string allocations
   static const String _buttonTapSound = 'audio/mouse_click_5.mp3';
-  static const String _swipeSound = 'audio/swipe_1.mp3';
+  static const String _swipeSound = 'audio/move.mp3';
   static const String _winSound = 'audio/win_2.mp3';
   static const String _failSound = 'audio/fail_3.mp3';
 
@@ -57,7 +57,7 @@ class SoundService {
     await _playSound(_buttonTapPlayer, _buttonTapSound);
   }
 
-  /// Play swipe sound (swipe_1.mp3) - for color ball taps
+  /// Play move sound (move.mp3) - for tile taps
   Future<void> playSwipe() async {
     await _playSound(_swipePlayer, _swipeSound);
   }

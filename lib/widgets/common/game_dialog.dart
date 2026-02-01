@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import '../../constants/app_colors.dart';
-import '../../constants/game_constants.dart';
 import '../../utils/responsive_helper.dart';
 import '../../services/sound_service.dart';
 
@@ -12,6 +10,8 @@ class GameDialog extends StatefulWidget {
   final Widget content;
   final List<Widget> actions;
   final bool showCloseButton;
+  /// When true, reduces space below heading and before actions (e.g. level complete pop-up).
+  final bool compactSpacing;
 
   const GameDialog({
     super.key,
@@ -20,6 +20,7 @@ class GameDialog extends StatefulWidget {
     required this.content,
     required this.actions,
     this.showCloseButton = true,
+    this.compactSpacing = false,
   });
 
   @override
@@ -29,11 +30,9 @@ class GameDialog extends StatefulWidget {
 class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
   late AnimationController _scaleController;
   late AnimationController _glowController;
-  late AnimationController _shimmerController;
   
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
-  late Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
@@ -45,7 +44,6 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
   void dispose() {
     _scaleController.dispose();
     _glowController.dispose();
-    _shimmerController.dispose();
     super.dispose();
   }
 
@@ -59,11 +57,6 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    
-    _shimmerController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat();
 
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
@@ -71,10 +64,6 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
     
     _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-    
-    _shimmerAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
     );
 
     _scaleController.forward();
@@ -229,14 +218,14 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
                               ),
                             ),
                             
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
+                            SizedBox(height: widget.compactSpacing ? ResponsiveHelper.getSpacing(context, 8) : ResponsiveHelper.getSpacing(context, 24)),
                           ] else
-                            SizedBox(height: ResponsiveHelper.getSpacing(context, 16)),
+                            SizedBox(height: widget.compactSpacing ? 0 : ResponsiveHelper.getSpacing(context, 16)),
                           
                           // Content without background to reduce overflow
                           widget.content,
                           
-                          SizedBox(height: ResponsiveHelper.getSpacing(context, 24)),
+                          SizedBox(height: widget.compactSpacing ? ResponsiveHelper.getSpacing(context, 8) : ResponsiveHelper.getSpacing(context, 24)),
                           
                           // Action buttons with enhanced styling
                           Row(
@@ -290,49 +279,4 @@ class _GameDialogState extends State<GameDialog> with TickerProviderStateMixin {
       ),
     );
   }
-}
-
-/// Custom painter for shimmer effect
-class ShimmerPainter extends CustomPainter {
-  final double animation;
-  final Color color;
-
-  ShimmerPainter({
-    required this.animation,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final shimmerWidth = size.width * 0.3;
-    final shimmerX = (size.width + shimmerWidth) * animation - shimmerWidth;
-    
-    final shimmerRect = Rect.fromLTWH(
-      shimmerX,
-      0,
-      shimmerWidth,
-      size.height,
-    );
-    
-    final gradient = LinearGradient(
-      colors: [
-        Colors.transparent,
-        color,
-        Colors.transparent,
-      ],
-      stops: const [0.0, 0.5, 1.0],
-    );
-    
-    final shimmerPaint = Paint()
-      ..shader = gradient.createShader(shimmerRect);
-    
-    canvas.drawRect(shimmerRect, shimmerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

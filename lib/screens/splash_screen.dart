@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../utils/responsive_helper.dart';
+import '../widgets/common/background_image.dart';
 import 'home_screen.dart';
 
 /// Splash screen widget - shows app logo and developer credit
@@ -82,15 +82,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/img/bg.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: BackgroundImage(
         child: Stack(
           children: [
             // Main content - Logo completely centered
@@ -167,3 +159,4 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
   }
 }
+

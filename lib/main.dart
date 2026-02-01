@@ -76,6 +76,11 @@ class ColorSlideGame extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         fontFamily: 'Inter',
+        // Fallback to platform emoji font when Inter has no glyph (e.g. 🍪🍩🍡)
+        textTheme: ThemeData().textTheme.apply(
+          fontFamily: 'Inter',
+          fontFamilyFallback: const ['Apple Color Emoji', 'Noto Color Emoji', 'NotoColorEmoji'],
+        ),
       ),
       home: const SplashScreen(),
       debugShowCheckedModeBanner: false,

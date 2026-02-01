@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
 import '../../utils/responsive_helper.dart';
@@ -29,61 +30,52 @@ class GameHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonHeight = ResponsiveHelper.getButtonHeight(context) * 0.8; // 20% smaller
-    final iconSize = ResponsiveHelper.getIconSize(context, 14.4); // 18 * 0.8 = 14.4 (20% smaller)
-    final fontSize = ResponsiveHelper.getFontSize(context, 16); // 20 * 0.8 = 16 (20% smaller)
-    final buttonPadding = ResponsiveHelper.getSpacing(context, 8);
+    final buttonHeight = ResponsiveHelper.getButtonHeight(context) * 0.88;
+    final iconSize = ResponsiveHelper.getIconSize(context, 22);
+    final fontSize = ResponsiveHelper.getFontSize(context, 26);
     final borderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
-    
+
+    Widget _buildIconButton({
+      required VoidCallback onTap,
+      required IconData icon,
+    }) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Container(
+            width: buttonHeight,
+            height: buttonHeight,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              color: AppColors.bgCard.withOpacity(0.9),
+              border: Border.all(color: AppColors.gameAccent, width: 1.5),
+            ),
+            child: Icon(icon, size: iconSize, color: AppColors.gameAccent),
+          ),
+        ),
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Exit button (top-left)
-        ElevatedButton(
-          onPressed: _handleExit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.all(buttonPadding),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
-              
-            ),
-            minimumSize: Size(buttonHeight, buttonHeight),
-          ),
-          child: Icon(Icons.arrow_back, size: iconSize),
-        ),
-        
-        // Level name (center)
+        _buildIconButton(onTap: _handleExit, icon: Icons.arrow_back),
         Expanded(
           child: Center(
             child: Text(
               "Level $currentLevel",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize * 1.3, // 16 * 1.3 = 20.8 (smaller than before)
-                fontWeight: FontWeight.w900,
+              style: GoogleFonts.rajdhani(
+                color: Colors.black,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
-               
               ),
             ),
           ),
         ),
-        
-        // Reset button (top-right)
-        ElevatedButton(
-          onPressed: _handleReset,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white, // Changed to white to match back button
-            padding: EdgeInsets.all(buttonPadding),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
-            ),
-            minimumSize: Size(buttonHeight, buttonHeight),
-          ),
-          child: Icon(Icons.refresh, size: iconSize),
-        ),
+        _buildIconButton(onTap: _handleReset, icon: Icons.refresh),
       ],
     );
   }

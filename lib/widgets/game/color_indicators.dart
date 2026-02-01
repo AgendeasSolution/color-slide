@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../constants/app_colors.dart';
+import '../../constants/tile_image_constants.dart';
 import '../../constants/game_constants.dart';
 import '../../utils/responsive_helper.dart';
 import '../../models/level.dart';
 
-/// Color indicators widget showing the target colors
+/// Tile image indicators – first N images per level (N = number of columns).
 class ColorIndicators extends StatelessWidget {
   final Level config;
 
@@ -16,41 +17,53 @@ class ColorIndicators extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final indicatorHeight = ResponsiveHelper.getSpacing(context, GameConstants.colorIndicatorHeight);
+    final indicatorHeight = ResponsiveHelper.getSpacing(context, GameConstants.emojiIndicatorHeight);
     final padding = ResponsiveHelper.getSpacing(context, 4);
     final borderRadius = ResponsiveHelper.getBorderRadius(context, 6);
-    final blurRadius = ResponsiveHelper.getSpacing(context, 10);
     final maxBoardWidth = ResponsiveHelper.getMaxBoardWidth(context);
     final screenWidth = ResponsiveHelper.screenWidth(context);
-    
-    // Match the exact width calculation used by game board (no horizontal padding)
+
+    final imagePaths = List.generate(
+      config.colors.length,
+      (i) => TileImageConstants.imageForColorIndex(i),
+    );
+
     final boardWidth = math.min(maxBoardWidth, screenWidth);
-    
-    // Game board has internal padding of 10, so the actual content width is boardWidth - (padding * 2)
     final gameBoardPadding = ResponsiveHelper.getSpacing(context, 10);
     final contentWidth = boardWidth - (gameBoardPadding * 2);
-    
+
     return Center(
       child: SizedBox(
         width: contentWidth,
         child: Row(
-          children: config.colors.map((color) {
+          children: imagePaths.map((imagePath) {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: padding),
                 child: Container(
                   height: indicatorHeight,
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    color: AppColors.ballColors[color],
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0x99303C37),
+                        Color(0xCC0F1623),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(borderRadius),
-                    
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.ballColors[color]!.withOpacity(0.3),
-                        blurRadius: blurRadius,
-                        spreadRadius: 1,
+                    border: Border.all(color: AppColors.gameAccentDim, width: 1),
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey, size: 20),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

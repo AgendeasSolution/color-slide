@@ -9,7 +9,7 @@ class EmptyCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: DottedBorderPainter(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withOpacity(0.5),
         strokeWidth: 2,
         dashPattern: const [6, 4],
         radius: GameConstants.borderRadius,
