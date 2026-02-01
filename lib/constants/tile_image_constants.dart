@@ -4,16 +4,16 @@ class TileImageConstants {
   static const String _base = 'assets/img';
 
   static const List<String> allTileImages = [
-    '$_base/cookie.png',
     '$_base/dango.png',
+    '$_base/cupcake.png',
     '$_base/donut.png',
     '$_base/cherries.png',
     '$_base/lollipop.png',
-    '$_base/cupcake.png',
     '$_base/strawberry.png',
     '$_base/chocolate.png',
     '$_base/candy.png',
     '$_base/pineapple.png',
+     '$_base/cookie.png',
     '$_base/grapes.png',
   ];
 

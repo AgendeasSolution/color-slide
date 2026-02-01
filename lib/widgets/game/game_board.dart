@@ -29,7 +29,7 @@ class GameBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final gridSpacing = ResponsiveHelper.getGridSpacing(context);
     final cardBorderRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.cardBorderRadius);
-    final padding = ResponsiveHelper.getSpacing(context, 10);
+    final padding = ResponsiveHelper.getBoardPadding(context);
     final cellPadding = ResponsiveHelper.getBallPadding(context);
     final maxBoardWidth = ResponsiveHelper.getMaxBoardWidth(context);
     
@@ -80,7 +80,7 @@ class GameBoard extends StatelessWidget {
           width: boardWidth,
           height: boardHeight,
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            color: AppColors.bgDarker,
             borderRadius: BorderRadius.circular(cardBorderRadius),
             border: Border.all(
               color: AppColors.gameAccent.withOpacity(0.25),
@@ -116,6 +116,7 @@ class GameBoard extends StatelessWidget {
                 }
                 final colorIndex = config.colors.indexOf(colorName);
                 final imagePath = TileImageConstants.imageForColorIndex(colorIndex);
+                final cellRadius = ResponsiveHelper.getBorderRadius(context, GameConstants.borderRadius);
                 return GestureDetector(
                   onTap: () {
                     SoundService.instance.playSwipe();
@@ -123,11 +124,18 @@ class GameBoard extends StatelessWidget {
                   },
                   child: Padding(
                     padding: EdgeInsets.all(cellPadding),
-                    child: Center(
-                      child: Image.asset(
-                        imagePath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.bgCell,
+                        borderRadius: BorderRadius.circular(cellRadius),
+                      ),
+                      padding: EdgeInsets.all(ResponsiveHelper.getCandyImagePadding(context)),
+                      child: Center(
+                        child: Image.asset(
+                          imagePath,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey),
+                        ),
                       ),
                     ),
                   ),

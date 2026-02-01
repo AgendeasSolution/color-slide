@@ -25,13 +25,23 @@ class GameConstants {
   static const double verticalPaddingTablet = 18.0;
   static const double verticalPaddingLargeTablet = 24.0;
   
-  static const double gridSpacingMobile = 6.0;
-  static const double gridSpacingTablet = 8.0;
-  static const double gridSpacingLargeTablet = 10.0;
+  static const double gridSpacingMobile = 1.8;
+  static const double gridSpacingTablet = 2.7;
+  static const double gridSpacingLargeTablet = 3.6;
   
   static const double ballPaddingMobile = 3.0;
   static const double ballPaddingTablet = 4.0;
   static const double ballPaddingLargeTablet = 5.0;
+
+  /// Padding around candy/emoji image inside each cell
+  static const double candyImagePaddingMobile = 12.0;
+  static const double candyImagePaddingTablet = 14.0;
+  static const double candyImagePaddingLargeTablet = 16.0;
+
+  /// Padding inside game board (around the grid)
+  static const double boardPaddingMobile = 4.0;
+  static const double boardPaddingTablet = 5.0;
+  static const double boardPaddingLargeTablet = 6.0;
   
   // Font scales
   static const double fontScaleMobile = 1.0;

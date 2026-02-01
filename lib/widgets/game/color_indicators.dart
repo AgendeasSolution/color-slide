@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../../constants/app_colors.dart';
 import '../../constants/tile_image_constants.dart';
 import '../../constants/game_constants.dart';
@@ -20,26 +19,26 @@ class ColorIndicators extends StatelessWidget {
     final indicatorHeight = ResponsiveHelper.getSpacing(context, GameConstants.emojiIndicatorHeight);
     final padding = ResponsiveHelper.getSpacing(context, 4);
     final borderRadius = ResponsiveHelper.getBorderRadius(context, 6);
-    final maxBoardWidth = ResponsiveHelper.getMaxBoardWidth(context);
-    final screenWidth = ResponsiveHelper.screenWidth(context);
+    final cellWidth = ResponsiveHelper.getCellWidth(context, config);
+    final gridSpacing = ResponsiveHelper.getGridSpacing(context);
 
     final imagePaths = List.generate(
       config.colors.length,
       (i) => TileImageConstants.imageForColorIndex(i),
     );
 
-    final boardWidth = math.min(maxBoardWidth, screenWidth);
-    final gameBoardPadding = ResponsiveHelper.getSpacing(context, 10);
-    final contentWidth = boardWidth - (gameBoardPadding * 2);
+    final totalWidth = (cellWidth * config.colors.length) + (gridSpacing * (config.colors.length - 1));
 
     return Center(
       child: SizedBox(
-        width: contentWidth,
+        width: totalWidth,
         child: Row(
-          children: imagePaths.map((imagePath) {
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: padding),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (int i = 0; i < imagePaths.length; i++) ...[
+              if (i > 0) SizedBox(width: gridSpacing),
+              SizedBox(
+                width: cellWidth,
                 child: Container(
                   height: indicatorHeight,
                   clipBehavior: Clip.antiAlias,
@@ -59,7 +58,7 @@ class ColorIndicators extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.all(padding),
                       child: Image.asset(
-                        imagePath,
+                        imagePaths[i],
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey, size: 20),
                       ),
@@ -67,8 +66,8 @@ class ColorIndicators extends StatelessWidget {
                   ),
                 ),
               ),
-            );
-          }).toList(),
+            ],
+          ],
         ),
       ),
     );

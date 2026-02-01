@@ -30,6 +30,8 @@ class AppColors {
   static const bgDarker = Color(0xFF05080C);
   static const bgCard = Color(0xFF0D1219);
   static const bgCardHover = Color(0xFF141C26);
+  /// Cell background - distinct from board background for visible tiles
+  static const bgCell = Color(0xFF141C26);
   
   // Neon accent colors
   static const neonBlue = Color(0xFF00D4FF);

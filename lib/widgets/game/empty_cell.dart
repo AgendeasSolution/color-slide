@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_colors.dart';
 import '../../constants/game_constants.dart';
 
 /// Empty cell widget for the game board
@@ -8,13 +9,18 @@ class EmptyCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: DottedBorderPainter(
+      foregroundPainter: DottedBorderPainter(
         color: Colors.white.withOpacity(0.5),
         strokeWidth: 2,
         dashPattern: const [6, 4],
         radius: GameConstants.borderRadius,
       ),
-      child: Container(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgCell,
+          borderRadius: BorderRadius.circular(GameConstants.borderRadius),
+        ),
+      ),
     );
   }
 }

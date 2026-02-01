@@ -1,6 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../constants/game_constants.dart';
 import '../constants/app_colors.dart';
+import '../models/level.dart';
 
 /// Optimized responsive utility for handling various screen sizes
 /// Consolidates all responsive helper methods in one place
@@ -196,6 +200,74 @@ class ResponsiveHelper {
       tablet: GameConstants.ballPaddingTablet,
       largeTablet: GameConstants.ballPaddingLargeTablet,
     );
+  }
+
+  /// Get responsive candy/emoji image padding inside cells
+  static double getCandyImagePadding(BuildContext context) {
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.candyImagePaddingMobile,
+      tablet: GameConstants.candyImagePaddingTablet,
+      largeTablet: GameConstants.candyImagePaddingLargeTablet,
+    );
+  }
+
+  /// Get responsive game board padding (around the grid)
+  static double getBoardPadding(BuildContext context) {
+    return _getScaleFactor(
+      context,
+      mobile: GameConstants.boardPaddingMobile,
+      tablet: GameConstants.boardPaddingTablet,
+      largeTablet: GameConstants.boardPaddingLargeTablet,
+    );
+  }
+
+  /// Get game board dimensions (same logic as GameBoard for consistency)
+  static Size getGameBoardDimensions(BuildContext context, Level config) {
+    final gridSpacing = getGridSpacing(context);
+    final padding = getBoardPadding(context);
+    final maxBoardWidth = getMaxBoardWidth(context);
+    final screenWidth = ResponsiveHelper.screenWidth(context);
+    final screenHeight = ResponsiveHelper.screenHeight(context);
+    final aspectRatio = config.columns / config.rows;
+
+    double boardWidth = math.min(maxBoardWidth, screenWidth);
+    double boardHeight = boardWidth / aspectRatio;
+
+    final headerHeight = getButtonHeight(context);
+    final topSpacing = getSpacing(context, 24);
+    final bottomSpacing = getSpacing(context, 100);
+    final colorIndicatorsHeight = getSpacing(context, 42);
+    final colorIndicatorsSpacing = getSpacing(context, 12);
+    final availableHeight = screenHeight -
+        headerHeight -
+        topSpacing -
+        bottomSpacing -
+        colorIndicatorsHeight -
+        colorIndicatorsSpacing;
+    final maxBoardHeight = availableHeight * 0.85;
+
+    if (boardHeight > maxBoardHeight) {
+      boardHeight = maxBoardHeight;
+      boardWidth = boardHeight * aspectRatio;
+    }
+    if (boardWidth > maxBoardWidth) {
+      boardWidth = maxBoardWidth;
+      boardHeight = boardWidth / aspectRatio;
+    }
+
+    return Size(boardWidth, boardHeight);
+  }
+
+  /// Get cell width matching game board cells (for color indicators alignment)
+  static double getCellWidth(BuildContext context, Level config) {
+    final size = getGameBoardDimensions(context, config);
+    final padding = getBoardPadding(context);
+    final gridSpacing = getGridSpacing(context);
+    return (size.width -
+            (padding * 2) -
+            (gridSpacing * (config.columns - 1))) /
+        config.columns;
   }
 
   /// Get responsive text style
