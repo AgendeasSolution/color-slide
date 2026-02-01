@@ -10,10 +10,57 @@ class GameLogic {
     List<String?> solvedState = List.filled(boardSize, null);
     
     // Set the empty cell at the end
-    solvedState[boardSize - 1] = null;
+    final emptyIndex = boardSize - 1;
+    solvedState[emptyIndex] = null;
     
     // Generate a valid color distribution using column-by-column approach
     _generateColumnWiseValidBoard(solvedState, config);
+    
+    // Ensure exactly one empty cell and validate adjacency
+    int nullCount = solvedState.where((cell) => cell == null).length;
+    if (nullCount != 1 || !validateBoardDistribution(solvedState, config.columns, config.rows)) {
+      // Emergency fix: fill any remaining nulls with valid colors
+      for (int i = 0; i < boardSize; i++) {
+        if (i != emptyIndex && solvedState[i] == null) {
+          // Try to find a valid color for this position
+          bool filled = false;
+          for (String color in config.colors) {
+            if (_isColorValidAtPosition(solvedState, config, i, color, emptyIndex)) {
+              solvedState[i] = color;
+              filled = true;
+              break;
+            }
+          }
+          // If no valid color found with strict rules, try any color
+          if (!filled) {
+            solvedState[i] = config.colors[0];
+          }
+        }
+      }
+      
+      // Final validation - if still invalid, regenerate completely
+      if (!validateBoardDistribution(solvedState, config.columns, config.rows)) {
+        // Clear and regenerate from scratch
+        for (int i = 0; i < boardSize; i++) {
+          solvedState[i] = null;
+        }
+        solvedState[emptyIndex] = null;
+        
+        // Calculate color counts
+        final int cellsToFill = boardSize - 1;
+        final Map<String, int> colorCounts = {};
+        for (String color in config.colors) {
+          colorCounts[color] = cellsToFill ~/ config.colors.length;
+        }
+        final int remainder = cellsToFill % config.colors.length;
+        for (int i = 0; i < remainder; i++) {
+          colorCounts[config.colors[i]] = colorCounts[config.colors[i]]! + 1;
+        }
+        
+        // Use fallback directly
+        _generateFallbackCheckerboard(solvedState, config, colorCounts, emptyIndex);
+      }
+    }
     
     return solvedState;
   }
@@ -202,8 +249,9 @@ class GameLogic {
           }
         }
         if (available.isEmpty) {
+          // Cannot find valid placement - retry with different shuffle
           allPlaced = false;
-          break; // retry with new shuffle
+          break;
         }
         // Prefer color that spreads same emoji far (same as main backtrack)
         available.sort((a, b) {
@@ -229,7 +277,8 @@ class GameLogic {
     int emptyIndex,
   ) {
     final int columns = config.columns;
-    for (int attempt = 0; attempt < 30; attempt++) {
+    // Increase attempts significantly for better success rate
+    for (int attempt = 0; attempt < 100; attempt++) {
       for (int i = 0; i < board.length; i++) {
         board[i] = null;
       }
@@ -244,6 +293,7 @@ class GameLogic {
         if (sumA != sumB) return sumA.compareTo(sumB);
         return ra.compareTo(rb);
       });
+      // Always shuffle except first attempt
       if (attempt > 0) positions.shuffle(Random());
       Map<String, int> remaining = Map.from(colorCounts);
       bool ok = true;
@@ -255,18 +305,37 @@ class GameLogic {
             available.add(color);
           }
         }
-        if (available.isEmpty) { ok = false; break; }
+        if (available.isEmpty) { 
+          ok = false; 
+          break; 
+        }
         available.shuffle(Random());
         final color = available.first;
         board[pos] = color;
         remaining[color] = remaining[color]! - 1;
       }
-      if (ok) return;
+      if (ok && validateBoardDistribution(board, columns, config.rows)) {
+        return; // Success!
+      }
+    }
+    
+    // If still failing, there might be an impossible configuration
+    // Fill remaining nulls carefully with validation
+    for (int i = 0; i < board.length; i++) {
+      if (i != emptyIndex && board[i] == null) {
+        for (String color in config.colors) {
+          if (_isColorValidAtPosition(board, config, i, color, emptyIndex)) {
+            board[i] = color;
+            break;
+          }
+        }
+      }
     }
   }
 
 
   /// Checks if a color is valid at a specific position (no adjacent same colors)
+  /// Only checks orthogonal neighbors (up, down, left, right), not diagonals
   static bool _isColorValidAtPosition(
     List<String?> board,
     Level config,
@@ -279,25 +348,28 @@ class GameLogic {
     final int row = index ~/ columns;
     final int col = index % columns;
     
-    // Check all 8 directions around the position
-    for (int dr = -1; dr <= 1; dr++) {
-      for (int dc = -1; dc <= 1; dc++) {
-        if (dr == 0 && dc == 0) continue; // Skip current cell
+    // Check only orthogonal directions (up, down, left, right)
+    final List<List<int>> directions = [
+      [-1, 0], // up
+      [1, 0],  // down
+      [0, -1], // left
+      [0, 1],  // right
+    ];
+    
+    for (final dir in directions) {
+      final int newRow = row + dir[0];
+      final int newCol = col + dir[1];
+      
+      // Check bounds
+      if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+        final int neighborIndex = newRow * columns + newCol;
         
-        final int newRow = row + dr;
-        final int newCol = col + dc;
+        // Skip empty cell
+        if (neighborIndex == emptyIndex) continue;
         
-        // Check bounds
-        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
-          final int neighborIndex = newRow * columns + newCol;
-          
-          // Skip empty cell
-          if (neighborIndex == emptyIndex) continue;
-          
-          // Check if neighbor has the same color
-          if (board[neighborIndex] == color) {
-            return false; // Same color found adjacent
-          }
+        // Check if neighbor has the same color
+        if (board[neighborIndex] == color) {
+          return false; // Same color found in orthogonal position
         }
       }
     }
@@ -423,7 +495,7 @@ class GameLogic {
   }
 
   /// Validates that no two same-colored balls are adjacent in the board
-  /// Returns true if the board is valid (no adjacent same colors), false otherwise
+  /// Returns true if the board is valid (no orthogonally adjacent same colors), false otherwise
   static bool validateBoardDistribution(List<String?> boardState, int columns, int rows) {
     for (int i = 0; i < boardState.length; i++) {
       if (boardState[i] == null) continue;
@@ -431,19 +503,23 @@ class GameLogic {
       final int row = i ~/ columns;
       final int col = i % columns;
       
-      for (int dr = -1; dr <= 1; dr++) {
-        for (int dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue;
-          
-          final int newRow = row + dr;
-          final int newCol = col + dc;
-          
-          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
-            final int neighborIndex = newRow * columns + newCol;
-            if (boardState[neighborIndex] != null &&
-                boardState[i] == boardState[neighborIndex]) {
-              return false;
-            }
+      // Check only orthogonal directions (up, down, left, right)
+      final List<List<int>> directions = [
+        [-1, 0], // up
+        [1, 0],  // down
+        [0, -1], // left
+        [0, 1],  // right
+      ];
+      
+      for (final dir in directions) {
+        final int newRow = row + dir[0];
+        final int newCol = col + dir[1];
+        
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns) {
+          final int neighborIndex = newRow * columns + newCol;
+          if (boardState[neighborIndex] != null &&
+              boardState[i] == boardState[neighborIndex]) {
+            return false; // Same color found in orthogonal position
           }
         }
       }
